@@ -8,25 +8,29 @@ PPMuart     = []
 PPMpwm      = []
 timestamp   = []
 fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1)
-plt.title('CO2 concentration over Time')
+ax1 = fig.add_subplot(2, 1, 1)
+ax2 = fig.add_subplot(2, 1, 2)
 
 def animate(i):
    avai = ser.in_waiting
    if avai > 0:
       data=ser.readline()
-      # f = open('myfile.txt', 'a')
       data=str(data)
       data_from_sensor = data.split()
       for pos, x in enumerate(data_from_sensor):
          try:
             if x == keywords[0]:
                PPMuart.append(int(data_from_sensor[pos+1].split(",")[0]))
+               ax1.clear()
+               ax1.plot(timestamp[:-1], PPMuart)
+               plt.xlabel('Time (s)')
+               plt.ylabel('CO2 concentration (PPM)')
             elif x == keywords[1]:
                PPMpwm.append(int(data_from_sensor[pos+1].split(",")[0]))
-               ax.clear()
-               ax.plot(timestamp, PPMpwm, label="PPM_pwm")
-               ax.plot(timestamp, PPMuart, label="PPM_uart")
+               ax2.clear()
+               ax2.plot(timestamp, PPMpwm)
+               plt.xlabel('Time (s)')
+               plt.ylabel('CO2 concentration (PPM)')
             elif x == keywords[2]:
                timestamp.append(int(data_from_sensor[pos+1].split(",")[0]))
          except:
@@ -34,10 +38,7 @@ def animate(i):
          finally:
             pass
 
-   # f.write(data)
-   # f.write('\n')
-   # f.close()
-
+#Todo integrate two graph and
 
 ani = anime.FuncAnimation(fig, animate, interval=1000)
 plt.show()
