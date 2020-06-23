@@ -6,6 +6,7 @@ import abc
 import matplotlib.pyplot as plt
 import matplotlib.animation as anime
 from tkinter import *
+from tkinter import simpledialog
 import threading
 from datetime import datetime
 
@@ -114,6 +115,27 @@ class Controller:
         arduino_port = [port for port in my_ports if 'COM3' in port][0]
         self.serial = serial.Serial(arduino_port, 9600, timeout=0)
         self.sensor = List[Optional[Sensor]]
+        self.new_window = Tk()
+        self.new_window.mainloop()
+        self.s = simpledialog.askstring()
+
+    def create_sensor(self, sensor_type, ):
+
+    def calibrate(self):
+
+    def save_file(self):
+
+    def plot(self):
+
+    def stop(self):
+
+    def run(self):
+
+    def log(self):
+        """
+        save all the information for debug
+        :return:
+        """
 
 
 def animate(i):
