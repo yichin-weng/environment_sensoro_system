@@ -1,6 +1,12 @@
 #include <SoftwareSerial.h>
 #include <MHZ.h>
 
+// Include FreeRTOS library
+#include <Arduino_FreeRTOS.h>
+
+// Include queue support
+#include <queue.h>
+
 // pin for pwm reading
 #define CO2_IN 10
 
