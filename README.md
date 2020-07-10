@@ -49,11 +49,11 @@ It means that a running fan will enhance the efficiency of heat transfer.
 
 
 ```plantuml
-computer computer1
-Sensor   sensor1
-Sensor   sensor2
-Sensor   sensor3
-Sensor   sensor4
+node pc1
+node sensor1
+node sensor2
+node sensor3
+node sensor4
 pc1 -- sensor1 : SoftwareSerial
 pc1 -- sensor2 : SoftwareSerial
 pc1 -- sensor3 : SoftwareSerial
