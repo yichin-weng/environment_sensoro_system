@@ -48,8 +48,11 @@ It means that a running fan will enhance the efficiency of heat transfer.
 ## System structure:
 
 
-```puml
-    Alice -> Bob: Hello
-    Bob -> Alice: Hi!
+```plantuml
+start
+:Hello world;
+:This is on defined on
+several **lines**;
+end
 ```
 
