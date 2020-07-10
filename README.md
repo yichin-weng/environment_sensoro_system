@@ -47,8 +47,8 @@ It means that a running fan will enhance the efficiency of heat transfer.
 
 ## System structure:
 
-
-In order to build a system like the following figure, A multitask RTOS is needed.
+###
+In order to build a system like the following figure, A multitask real-time OS need.
 ```plantuml
 node pc1(python)
 node sensor1(RTOS)
@@ -60,3 +60,35 @@ pc1(python) <--> sensor2(RTOS) : SoftwareSerial
 pc1(python) <--> sensor3(RTOS) : SoftwareSerial
 pc1(python) <--> sensor4(RTOS) : SoftwareSerial
 ```
+
+### basic concept:
+    
+    1. python:
+        1. control multi-sensors
+            define instruction:
+                1. set up CO2 sensor parameter.
+                2. If needed, interrupt individual device.
+        2. plot a live graph
+        3. (optional) analyze data real-time
+        
+```plantuml
+start
+:instantiate all the devices;
+:check connection with different devices;
+:check whether we need to calibrate or not;
+if (iscalibration?) then (true)
+    :calibrate all devices by the instruction defined by sensor;
+else(false)
+:read CO2 UART;
+:read CO2 PWM;
+:get temperature;
+endif
+stop
+```
+        
+    2. arduino:
+        real-time operating system
+            1. initialize every sensor.
+            2. sample data from different sensors.
+            3. react with Personal Computer(python)
+        
