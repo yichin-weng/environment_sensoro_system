@@ -49,10 +49,14 @@ It means that a running fan will enhance the efficiency of heat transfer.
 
 
 ```plantuml
-start
-:Hello world;
-:This is on defined on
-several **lines**;
-end
+computer pc1
+Sensor   sensor1
+Sensor   sensor2
+Sensor   sensor3
+Sensor   sensor4
+pc1 -- sensor1 : SoftwareSerial
+pc1 -- sensor2 : SoftwareSerial
+pc1 -- sensor3 : SoftwareSerial
+pc1 -- sensor4 : SoftwareSerial
 ```
 
