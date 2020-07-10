@@ -48,15 +48,15 @@ It means that a running fan will enhance the efficiency of heat transfer.
 ## System structure:
 
 
+In order to build a system like the following figure, A multitask RTOS is needed.
 ```plantuml
-node pc1
-node sensor1
-node sensor2
-node sensor3
-node sensor4
-pc1 -- sensor1 : SoftwareSerial
-pc1 -- sensor2 : SoftwareSerial
-pc1 -- sensor3 : SoftwareSerial
-pc1 -- sensor4 : SoftwareSerial
+node pc1(python)
+node sensor1(RTOS)
+node sensor2(RTOS)
+node sensor3(RTOS)
+node sensor4(RTOS)
+pc1(python) <--> sensor1(RTOS) : SoftwareSerial
+pc1(python) <--> sensor2(RTOS) : SoftwareSerial
+pc1(python) <--> sensor3(RTOS) : SoftwareSerial
+pc1(python) <--> sensor4(RTOS) : SoftwareSerial
 ```
-
