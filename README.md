@@ -49,7 +49,7 @@ It means that a running fan will enhance the efficiency of heat transfer.
 
 
 ```plantuml
-computer pc1
+computer computer1
 Sensor   sensor1
 Sensor   sensor2
 Sensor   sensor3
