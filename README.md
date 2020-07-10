@@ -46,3 +46,10 @@ It means that a running fan will enhance the efficiency of heat transfer.
 
 
 ## System structure:
+
+
+```puml
+    Alice -> Bob: Hello
+    Bob -> Alice: Hi!
+```
+
