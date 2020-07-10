@@ -79,10 +79,11 @@ start
 if (iscalibration?) then (true)
     :calibrate all devices by the instruction defined by sensor;
 else(false)
+endif
 :read CO2 UART;
 :read CO2 PWM;
 :get temperature;
-endif
+
 stop
 ```
         
