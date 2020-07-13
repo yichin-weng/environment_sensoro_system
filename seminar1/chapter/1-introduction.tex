@@ -1,0 +1,14 @@
+\section{序文}
+\label{sec:序文}
+
+本レポートは「Heart Rate Variability-based Driver Drowsiness Detection and its Validation」(Koichi Fujiwara, Erika Abe, Keisuke Kamata, Chikao Nakayama, Yoko Suzuki, Toshitaka Yamakawa, toshihiro Hiraoka, Manabu Kano, Yukiyoshi Sumi, Fumi Masuda, Masahiro Matsuo, Hiroshi Kadotami著 2018)をまとめたものである．
+
+レポート中の図は基本的にこの論文から引用したものであることを最初に述べておく．
+
+\section{Introduction}
+\label{sec:Introduction}
+眠気のある運転者の交通事故のリスクは，覚醒している（眠気がない）運転者に対して4倍から6倍高いと推定されている．Gottliebらの研究によると，睡眠時無呼吸や睡眠時間が十分でない場合，運転者の主観的な眠気に関係なく，交通事故が発生するリスクが高まる\cite{gottlieb(2018)}．眠気運転による事故を防ぐためには，眠気運転を検知して運転者に警告する運転支援システムが有効である．
+
+睡眠医学では，睡眠の開始と睡眠段階がEEG(脳波)に基づいて定義されるため，EEG計測が睡眠スコアリングに必要である．EEG計測は，モーションアーチファクトに不寛容であり，身体に制限を課すため，運転中にEEGを正確に記録することが困難である．
+
+本研究では，HRVに基づくてんかん発作予測の枠組みを利用して，HRVに基づく運転者の眠気検出アルゴリズムを提案している．運転者のHRVデータの異常は，製造業で使用される異常検出アルゴリズムである多変量統計プロセス管理(MSPC)\cite{fujiwara(2015)}によって監視される．提案した方法を検証するため，ドライビングシミュレータ実験を実施した．そこでは，睡眠専門家によるEEGに基づいた睡眠スコアリングを参照として使用された．

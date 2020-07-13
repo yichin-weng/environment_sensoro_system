@@ -1,0 +1,105 @@
+\documentclass[a4j,12pt,supertabular]{article}
+%\documentclass[a4j,12pt,draft]{jarticle}
+
+\usepackage[dvipdfmx]{graphicx}
+%\usepackage{bm}
+\usepackage{amsmath}
+\usepackage{amssymb}%実数記号に必要
+\usepackage{supertabular}
+\usepackage{subfig}
+%\usepackage{longtable}
+\usepackage{here}
+%\usepackage{cite}
+\usepackage{xecjk}
+\setCJKmainfont{MS Gothic}
+\setCJKsansfont{MS Gothic}
+
+
+
+%\setlength{\oddsidemargin}{-5mm}  % 奇数ページの左部マージン
+%\setlength{\evensidemargin}{0mm} % 偶数ページの左部マージン
+%\setlength{\topmargin}{0mm}      % 組版領域上端〜ヘッダ部上端のマージン
+%\setlength{\topskip}{0mm}        % 本文領域上端〜本文のマージン
+%\setlength{\headsep}{0mm}        % ヘッダ部下端〜本文領域上端のマージン
+%\setlength{\headheight}{-12mm}     % ヘッダ部の高さ
+%\setlength{\textwidth}{170mm}    % 本文領域の幅
+%\setlength{\textheight}{260mm}   % 本文領域の高さ
+%\renewcommand{\prechaptername}{} %\chapterコマンド、番号の前
+%\renewcommand{\postchaptername}{} %\chapterコマンド、番号の後
+%\renewcommand{\abstractname}{概要} %abstract環境、文字列
+%\renewcommand{\contentsname}{目次} %\tableofcontents
+%\renewcommand{\figurename}{図} %figure環境、\captionコマンド、番号に付く
+%\renewcommand{\tablename}{表} %table環境、\captionコマンド、番号に付く
+%\renewcommand{\refname}{参考文献} % jarticle、tarticleクラス
+%\renewcommand{\bibname}{参考文献} % jbook、jreportクラス
+
+%\newenvironment{minilinespace}{
+%\baselineskip = 1mm
+%}
+
+%\renewcommand{\bibname}{参考文献}
+
+\makeatletter
+\renewcommand{\theequation}{\thesection.\arabic{equation}}\@addtoreset{equation}{section}
+\renewcommand{\thefigure}{\thesection.\arabic{figure}}\@addtoreset{figure}{section}
+\renewcommand{\thetable}{\thesection.\arabic{table}}\@addtoreset{table}{section}
+%\def\tabcaption{\def\@captype{table}\caption}
+\def\figcaption{\def\@captype{figure}\caption}
+\makeatother
+
+
+\makeatletter
+%\renewcommand{\thechapter}{}
+%\renewcommand{\thesection}{\arabic{section}}
+\makeatother
+
+\begin{document}
+
+%表紙
+\setlength{\baselineskip}{15pt}
+\thispagestyle{empty}
+
+\begin{center}
+	\vspace*{5cm}
+	{\Huge 生体工学ゼミナールI}\\
+\end{center}
+\vspace{5cm}
+
+
+\begin{center}
+	{\Large 大阪大学大学院　基礎工学研究科}\\
+	\vspace{0.3cm}
+	{\Large 機能創成専攻　生体工学領域　清野研究室}\\
+	\vspace{0.3cm}
+	{\Large 学籍コード : 29B20059　氏名 : Yichin Weng}\\
+\end{center}
+\vspace{2cm}
+\begin{center}
+	{\Large 指導教員：清野　健}\\
+	\vspace{2cm}
+	{\Large 提出日：2020年　 月　  日}\\
+\end{center}
+
+
+\newpage
+\thispagestyle{empty}
+\mbox{}
+
+
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}  %ページ数を１に合した
+
+
+%%%%本文
+\input{./chapter/1-introduction.tex}
+\newpage
+
+
+%%%%%%%%%参考文献
+\bibliographystyle{unsrt}
+\bibliography{./chapter/reference}
+\clearpage
+
+
+\end{document}

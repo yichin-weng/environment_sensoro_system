@@ -49,6 +49,7 @@ It means that a running fan will enhance the efficiency of heat transfer.
 
 ###
 In order to build a system like the following figure, A multitask real-time OS need.
+
 ```plantuml
 node pc1
 node sensor1
