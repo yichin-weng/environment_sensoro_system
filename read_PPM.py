@@ -5,10 +5,11 @@ import serial.tools.list_ports
 import abc
 import matplotlib.pyplot as plt
 import matplotlib.animation as anime
+import threading
 from tkinter import *
 from tkinter import simpledialog
-import threading
 from datetime import datetime
+from tkinter import ttk
 
 ser = serial.Serial('COM3', 9600, timeout=0)
 keywords = ["b'PPMuart:", "PPMpwm:", "start:"]
@@ -108,6 +109,44 @@ class MHZ14A(Sensor):
         """
         pass
 
+class StartPage(Frame):
+    """
+    initial page of this
+    """
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        label = Label(self, text=" CO2 sensor control system ", font=)
+        bu
+
+
+class Window(Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.canvas = Canvas
+        self.pack()
+        self.create_buttons()
+        self.start = None
+        self.stop  = None
+        self.store = None
+        self.calibrate = None
+
+    def create_buttons(self):
+        self.start = Button(self, text="start", command=self.start_plot)
+        self.stop  = Button(self, text="stop", command=self.stop_plot)
+        self.store = Button(self, text="store", command=self.store_plot)
+        self.calibrate = Button(self, text="calibrate", command=self.calibrate)
+
+    # collect CO2 data and plot live graph
+    def start_plot(self):
+        pass
+
+    #
+    def stop_plot(self):
+        pass
+
+    def calibrate(self):
+        pass
 
 class Controller:
     def __init__(self):
@@ -119,7 +158,12 @@ class Controller:
         self.new_window.mainloop()
         self.s = simpledialog.askstring()
 
-    def create_sensor(self, sensor_type, ):
+    # create a popup window with start, stop, calibrate and icon
+    def create_interactive_window(self):
+
+    def read_option(self):
+
+    def create_sensor(self, sensor_type):
 
     def calibrate(self):
 
@@ -151,13 +195,13 @@ def animate(i):
                     ax1.clear()
                     ax1.plot(timestamp[:-1], PPMuart)
                     plt.xlabel('Time (s)')
-                    plt.ylabel('CO2 concentration (PPM)')
+                    plt.ylabel('CO2 concentration (PPMUart)')
                 elif x == keywords[1]:
                     PPMpwm.append(int(data_from_sensor[pos + 1].split(",")[0]))
                     ax1.clear()
                     ax1.plot(timestamp, PPMpwm)
                     plt.xlabel('Time (s)')
-                    plt.ylabel('CO2 concentration (PPM)')
+                    plt.ylabel('CO2 concentration (PPMpwm)')
                 elif x == keywords[2]:
                     timestamp.append(int(data_from_sensor[pos + 1].split(",")[0]))
             except:
@@ -169,5 +213,13 @@ def animate(i):
 # Todo integrate two graph and
 
 
-ani = anime.FuncAnimation(fig, animate, interval=200)
-plt.show()
+def main():
+    ani = anime.FuncAnimation(fig, animate, interval=200)
+    plt.show()
+
+#create a new window and
+if __name__ == '__name__':
+    root = Tk()
+    root.title("CO2 control system")
+    main = Window(root)
+    root.mainloop()

@@ -73,7 +73,10 @@ pc1 <--> sensor4 : SoftwareSerial
         3. (optional) analyze data real-time
         
 ```plantuml
+
 start
+:instantiate a GUI
+:access 'COM3'
 :instantiate all the devices;
 :check connection with different devices;
 :check whether we need to calibrate or not;
