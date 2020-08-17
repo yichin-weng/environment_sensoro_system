@@ -12,7 +12,8 @@ Hardware:
 1. **arduino microcontroller**: implement the interface to access different types of sensor 
 and periodically send data to computer by **Serial port**.
 2. **CO2 sensor (MHZ14A)**:  With at least four sensors. (unit:ppm)
-3. **lists to buy**:
+3. **TR-76Ui**: control model.
+4. **lists to buy**:
 
 |item|price|numbers|description|
 |----|-----|-------|-----------|
@@ -29,7 +30,8 @@ and periodically send data to computer by **Serial port**.
 |item|price|numbers|description|
 |----|-----|-------|-----------|
 |[MAX17079](https://www.digikey.jp/products/en/development-boards-kits-programmers/evaluation-and-demonstration-boards-and-kits/787?k=MAX17079)|8420yen/1|1|is the level shifter which is used to control multiple fans.|
-
+|[automatic screw](https://reurl.cc/Q3n260)|
+|[4pin 2510](https://reurl.cc/KjKqAy)|
     
 Software:
 1. arduino IDE : integrate FreeRTOS and CO2 sensor code.
@@ -47,6 +49,20 @@ It means that a running fan will enhance the efficiency of heat transfer.
 
 ## System structure:
 
+## design pattern:
+1.  abstract factory: In this type design pattern, it creates an interface to extend and customize components.
+2.  adapter: It is used to support legacy code. (It will not be used in this project)
+3.  builder: It is used to build an object with a lot of configurations.
+4.  factory method: It can provide high level flexibility.
+5.  command: It is used for queueing task, callbacks, tracking operation.
+6.  iterator: It is used for traversing the collections
+7.  observer: It provides a way to react to an event happening in other objects.
+8.  strategy: It provides the flexibility that users define their own strategy to change the operation of the object.
+
+
+
+iterator for creating device we have.
+
 ###
 In order to build a system like the following figure, A multitask real-time OS need.
 
@@ -62,7 +78,7 @@ pc1 <--> sensor3 : SoftwareSerial
 pc1 <--> sensor4 : SoftwareSerial
 ```
 
-### basic concept:
+### basic concepts:
     
     1. python:
         1. control multi-sensors

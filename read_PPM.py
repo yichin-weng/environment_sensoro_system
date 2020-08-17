@@ -1,3 +1,4 @@
+from abc import ABC
 from typing import Optional, List
 
 import serial
@@ -6,6 +7,8 @@ import abc
 import matplotlib.pyplot as plt
 import matplotlib.animation as anime
 import threading
+from collections.abc import Iterable, Iterator
+from typing import Any, List
 from tkinter import *
 from tkinter import simpledialog
 from datetime import datetime
@@ -109,14 +112,22 @@ class MHZ14A(Sensor):
         """
         pass
 
+
+class SensorsCollection(Iterable, ABC):
+    def __init__(self, collection: List[Any] = []) -> None:
+        self._collection = collection
+
+    def __iter__(self):
+        return
+
+
 class StartPage(Frame):
     """
     initial page of this
     """
+
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-        label = Label(self, text=" CO2 sensor control system ", font=)
-        bu
 
 
 class Window(Frame):
@@ -127,13 +138,13 @@ class Window(Frame):
         self.pack()
         self.create_buttons()
         self.start = None
-        self.stop  = None
+        self.stop = None
         self.store = None
         self.calibrate = None
 
     def create_buttons(self):
         self.start = Button(self, text="start", command=self.start_plot)
-        self.stop  = Button(self, text="stop", command=self.stop_plot)
+        self.stop = Button(self, text="stop", command=self.stop_plot)
         self.store = Button(self, text="store", command=self.store_plot)
         self.calibrate = Button(self, text="calibrate", command=self.calibrate)
 
@@ -148,6 +159,7 @@ class Window(Frame):
     def calibrate(self):
         pass
 
+
 class Controller:
     def __init__(self):
         my_ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
@@ -160,26 +172,31 @@ class Controller:
 
     # create a popup window with start, stop, calibrate and icon
     def create_interactive_window(self):
+        pass
 
     def read_option(self):
+        pass
 
     def create_sensor(self, sensor_type):
+        pass
 
     def calibrate(self):
+        pass
 
     def save_file(self):
+        pass
 
     def plot(self):
+        pass
 
     def stop(self):
+        pass
 
     def run(self):
+        pass
 
     def log(self):
-        """
-        save all the information for debug
-        :return:
-        """
+        pass
 
 
 def animate(i):
@@ -217,7 +234,8 @@ def main():
     ani = anime.FuncAnimation(fig, animate, interval=200)
     plt.show()
 
-#create a new window and
+
+# create a new window and
 if __name__ == '__name__':
     root = Tk()
     root.title("CO2 control system")
