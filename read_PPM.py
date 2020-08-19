@@ -74,8 +74,8 @@ class MHZ14A(Sensor):
         """
 
     def animate(self):
-        if self.serial.in_waiting > 0:
-            data = self.serial.readline()
+        if ser.in_waiting > 0:
+            data = ser.readline()
             data = str(data)
             data_from_sensor = data.split()
             for pos, x in enumerate(data_from_sensor):
@@ -88,8 +88,8 @@ class MHZ14A(Sensor):
                         plt.ylabel('CO2 concentration (PPM)')
                     elif x == keywords[1]:
                         PPMpwm.append(int(data_from_sensor[pos + 1].split(",")[0]))
-                        ax2.clear()
-                        ax2.plot(timestamp, PPMpwm)
+                        ax1.clear()
+                        ax1.plot(timestamp, PPMpwm)
                         plt.xlabel('Time (s)')
                         plt.ylabel('CO2 concentration (PPM)')
                     elif x == keywords[2]:
@@ -160,7 +160,25 @@ class Window(Frame):
         pass
 
 
-class Controller:
+class DataController:
+    """
+    In this class, implement anything about data processing.
+    """
+    def __init__(self):
+
+
+class GUIController:
+    """
+    In this class, implement anything about User interface.
+    """
+    def __init__(self):
+
+
+class Controller():
+    """
+    Because DataController and GUIController are independent of each other,
+    this controller need to manager
+    """
     def __init__(self):
         my_ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
         arduino_port = [port for port in my_ports if 'COM3' in port][0]
@@ -193,7 +211,10 @@ class Controller:
         pass
 
     def run(self):
-        pass
+        """
+
+        :return:
+        """
 
     def log(self):
         pass
@@ -230,14 +251,9 @@ def animate(i):
 # Todo integrate two graph and
 
 
-def main():
-    ani = anime.FuncAnimation(fig, animate, interval=200)
-    plt.show()
+if __name__ == '__main__':
+    server = Controller()
+    server.run()
 
 
 # create a new window and
-if __name__ == '__name__':
-    root = Tk()
-    root.title("CO2 control system")
-    main = Window(root)
-    root.mainloop()
