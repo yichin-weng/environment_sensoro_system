@@ -48,10 +48,6 @@ class Sensor(metaclass=abc.ABCMeta):
         """
         return NotImplemented
 
-    @abc.abstractmethod
-    def animate(self):
-        return NotImplemented
-
 
 class MHZ14A(Sensor):
     """
@@ -137,11 +133,21 @@ class DataController:
     """
     In this class, implement everything about data processing.
     """
+
     def __init__(self):
         my_ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
         arduino_port = [port for port in my_ports if 'Arduino' in port[1]][0]
-        self.serial = serial.Serial(arduino_port, 9600, timeout=0)  # consider a method to change serial data rate.
-        self.sensor = [tuple]
+        self.start_time = current_time()
+        if arduino_port is not None:
+            self.serial = serial.Serial(arduino_port[0], 9600,
+                                        timeout=0)  # consider a method to change serial data rate.
+
+    def read_data(self):
+        if self.serial.inWaiting():
+            self.serial.readlines()
+
+    def store_data(self):
+        pass
 
     def set_serial_baudrate(self, target):
         self.serial.baudrate = target
@@ -152,9 +158,28 @@ class GUIController:
     In this class, implement everything about User interface.
 
     """
+
     def __init__(self):
         self.top = Tk()
-        self.label = Label(text="room environment monitor")
+        self.label = Label(self.top, text="room environment monitor")
+        self.label.pack()
+        self.setting = Button(self.top, text="setting", command=self.settingcallback)
+        self.setting.pack()
+        self.newwindow = None
+
+    def settingcallback(self):
+        self.newwindow = Toplevel(self.top)
+
+    def plot(self):
+        pass
+
+    def pack_label(self):
+        for l in self.label:
+            l.pack()
+
+    def pack_button(self):
+        for b in self.button:
+            b.pack()
 
     def run(self):
         self.top.mainloop()
@@ -165,6 +190,7 @@ class Controller:
     Because DataController and GUIController are independent of each other,
     this controller need to manager
     """
+
     def __init__(self):
         self.data_server = DataController()
         self.gui_server = GUIController()
@@ -196,6 +222,7 @@ class Controller:
 
         :return:
         """
+        self.gui_server.run()
 
     def log(self):
         pass
@@ -207,6 +234,5 @@ class Controller:
 if __name__ == '__main__':
     server = Controller()
     server.run()
-
 
 # create a new window and
