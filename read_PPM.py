@@ -14,7 +14,6 @@ from tkinter import simpledialog
 from datetime import datetime
 from tkinter import ttk
 
-ser = serial.Serial('COM3', 9600, timeout=0)
 keywords = ["b'PPMuart:", "PPMpwm:", "start:"]
 PPMuart = []
 PPMpwm = []
@@ -73,32 +72,6 @@ class MHZ14A(Sensor):
         status: success or false.
         """
 
-    def animate(self):
-        if ser.in_waiting > 0:
-            data = ser.readline()
-            data = str(data)
-            data_from_sensor = data.split()
-            for pos, x in enumerate(data_from_sensor):
-                try:
-                    if x == keywords[0]:
-                        PPMuart.append(int(data_from_sensor[pos + 1].split(",")[0]))
-                        ax1.clear()
-                        ax1.plot(timestamp[:-1], PPMuart)
-                        plt.xlabel('Time (s)')
-                        plt.ylabel('CO2 concentration (PPM)')
-                    elif x == keywords[1]:
-                        PPMpwm.append(int(data_from_sensor[pos + 1].split(",")[0]))
-                        ax1.clear()
-                        ax1.plot(timestamp, PPMpwm)
-                        plt.xlabel('Time (s)')
-                        plt.ylabel('CO2 concentration (PPM)')
-                    elif x == keywords[2]:
-                        timestamp.append(int(data_from_sensor[pos + 1].split(",")[0]))
-                except:
-                    pass
-                finally:
-                    pass
-
     def store(self):
         """
         :return:
@@ -126,7 +99,7 @@ class StartPage(Frame):
     initial page of this
     """
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent):
         Frame.__init__(self, parent)
 
 
@@ -162,31 +135,39 @@ class Window(Frame):
 
 class DataController:
     """
-    In this class, implement anything about data processing.
+    In this class, implement everything about data processing.
     """
     def __init__(self):
+        my_ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
+        arduino_port = [port for port in my_ports if 'Arduino' in port[1]][0]
+        self.serial = serial.Serial(arduino_port, 9600, timeout=0)  # consider a method to change serial data rate.
+        self.sensor = [tuple]
+
+    def set_serial_baudrate(self, target):
+        self.serial.baudrate = target
 
 
 class GUIController:
     """
-    In this class, implement anything about User interface.
+    In this class, implement everything about User interface.
+
     """
     def __init__(self):
+        self.top = Tk()
+        self.label = Label(text="room environment monitor")
+
+    def run(self):
+        self.top.mainloop()
 
 
-class Controller():
+class Controller:
     """
     Because DataController and GUIController are independent of each other,
     this controller need to manager
     """
     def __init__(self):
-        my_ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
-        arduino_port = [port for port in my_ports if 'COM3' in port][0]
-        self.serial = serial.Serial(arduino_port, 9600, timeout=0)
-        self.sensor = List[Optional[Sensor]]
-        self.new_window = Tk()
-        self.new_window.mainloop()
-        self.s = simpledialog.askstring()
+        self.data_server = DataController()
+        self.gui_server = GUIController()
 
     # create a popup window with start, stop, calibrate and icon
     def create_interactive_window(self):
@@ -218,34 +199,6 @@ class Controller():
 
     def log(self):
         pass
-
-
-def animate(i):
-    avai = ser.in_waiting
-    if avai > 0:
-        data = ser.readline()
-        data = str(data)
-        data_from_sensor = data.split()
-        for pos, x in enumerate(data_from_sensor):
-            try:
-                if x == keywords[0]:
-                    PPMuart.append(int(data_from_sensor[pos + 1].split(",")[0]))
-                    ax1.clear()
-                    ax1.plot(timestamp[:-1], PPMuart)
-                    plt.xlabel('Time (s)')
-                    plt.ylabel('CO2 concentration (PPMUart)')
-                elif x == keywords[1]:
-                    PPMpwm.append(int(data_from_sensor[pos + 1].split(",")[0]))
-                    ax1.clear()
-                    ax1.plot(timestamp, PPMpwm)
-                    plt.xlabel('Time (s)')
-                    plt.ylabel('CO2 concentration (PPMpwm)')
-                elif x == keywords[2]:
-                    timestamp.append(int(data_from_sensor[pos + 1].split(",")[0]))
-            except:
-                pass
-            finally:
-                pass
 
 
 # Todo integrate two graph and
