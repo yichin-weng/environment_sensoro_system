@@ -10,7 +10,7 @@ import threading
 from collections.abc import Iterable, Iterator
 from typing import Any, List
 from tkinter import *
-from tkinter import simpledialog
+from tkinter import simpledialog, filedialog
 from datetime import datetime
 from tkinter import ttk
 
@@ -129,6 +129,15 @@ class Window(Frame):
         pass
 
 
+class FileController:
+    """
+    In this class, implement everything about file manager, read, write etc.
+    """
+    def __init__(self):
+        self.path = None
+        self.data = []  #
+
+
 class DataController:
     """
     In this class, implement everything about data processing.
@@ -141,8 +150,10 @@ class DataController:
         if arduino_port is not None:
             self.serial = serial.Serial(arduino_port[0], 9600,
                                         timeout=0)  # consider a method to change serial data rate.
+        else:
+            self.serial = None
 
-    def read_data(self):
+    def serial_read_data(self):
         if self.serial.inWaiting():
             self.serial.readlines()
 
@@ -156,30 +167,40 @@ class DataController:
 class GUIController:
     """
     In this class, implement everything about User interface.
-
     """
 
     def __init__(self):
         self.top = Tk()
-        self.label = Label(self.top, text="room environment monitor")
-        self.label.pack()
-        self.setting = Button(self.top, text="setting", command=self.settingcallback)
-        self.setting.pack()
-        self.newwindow = None
+        self.label = []
+        self.button = []
+        self.filedialog = None  # this is the diagram for load file interface
+        self.new_window = None
 
-    def settingcallback(self):
-        self.newwindow = Toplevel(self.top)
+    def create_label(self):
+        self.label.append(Label(self.top, text="room environment monitor"))
 
-    def plot(self):
-        pass
+    def create_button(self):
+        self.button.append(Button(self.top, text="setting", command=self.setting_callback))
+        self.button.append(Button(self.top, text="load file", command=self.gotofiledialog))
+
+    def gotofiledialog(self):
+        self.filedialog = filedialog.LoadFileDialog(self.top)
+        self.filedialog.go(key="go")
+
+    def setting_callback(self):
+        self.new_window = Toplevel(self.top)
 
     def pack_label(self):
-        for l in self.label:
-            l.pack()
+        """pack all the label into the window"""
+        for label in self.label:
+            label.pack()
 
     def pack_button(self):
         for b in self.button:
             b.pack()
+
+    def plot(self):
+        pass
 
     def run(self):
         self.top.mainloop()
@@ -222,6 +243,10 @@ class Controller:
 
         :return:
         """
+        self.gui_server.create_label()
+        self.gui_server.create_button()
+        self.gui_server.pack_label()
+        self.gui_server.pack_button()
         self.gui_server.run()
 
     def log(self):
