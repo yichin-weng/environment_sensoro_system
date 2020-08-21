@@ -183,6 +183,10 @@ class GUIController:
         self.button.append(Button(self.top, text="setting", command=self.setting_callback))
         self.button.append(Button(self.top, text="load file", command=self.gotofiledialog))
 
+    def create_all(self):
+        self.create_label()
+        self.create_button()
+
     def gotofiledialog(self):
         self.filedialog = filedialog.LoadFileDialog(self.top)
         self.filedialog.go(key="go")
@@ -198,6 +202,10 @@ class GUIController:
     def pack_button(self):
         for b in self.button:
             b.pack()
+
+    def pack_all(self):
+        self.pack_button()
+        self.pack_label()
 
     def plot(self):
         pass
@@ -243,10 +251,8 @@ class Controller:
 
         :return:
         """
-        self.gui_server.create_label()
-        self.gui_server.create_button()
-        self.gui_server.pack_label()
-        self.gui_server.pack_button()
+        self.gui_server.create_all()
+        self.gui_server.pack_all()
         self.gui_server.run()
 
     def log(self):
