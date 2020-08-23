@@ -135,7 +135,12 @@ class FileController:
     """
     def __init__(self):
         self.path = None
+        self.file = []
         self.data = []  #
+
+    def update(self, file):
+        self.file.append(file)
+
 
 
 class DataController:
@@ -144,13 +149,16 @@ class DataController:
     """
 
     def __init__(self):
-        my_ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
-        arduino_port = [port for port in my_ports if 'Arduino' in port[1]][0]
         self.start_time = current_time()
-        if arduino_port is not None:
+        my_ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
+        try:
+            arduino_port = [port for port in my_ports if 'Arduino' in port[1]][0]
+        except:
+            arduino_port = []
+        try:
             self.serial = serial.Serial(arduino_port[0], 9600,
                                         timeout=0)  # consider a method to change serial data rate.
-        else:
+        except:
             self.serial = None
 
     def serial_read_data(self):
@@ -173,6 +181,7 @@ class GUIController:
         self.top = Tk()
         self.label = []
         self.button = []
+        self.observers = []
         self.filedialog = None  # this is the diagram for load file interface
         self.new_window = None
 
@@ -182,6 +191,7 @@ class GUIController:
     def create_button(self):
         self.button.append(Button(self.top, text="setting", command=self.setting_callback))
         self.button.append(Button(self.top, text="load file", command=self.gotofiledialog))
+        self.button.append(Button(self.top, text=""))
 
     def create_all(self):
         self.create_label()
@@ -193,6 +203,32 @@ class GUIController:
 
     def setting_callback(self):
         self.new_window = Toplevel(self.top)
+
+    def attach_observers(self, observer):
+        """
+
+        :param observer:
+        :return:
+        """
+        self.observers.append(observer)
+
+    def detach_observer(self, observer):
+        """
+
+        :param observer:
+        :return:
+        """
+        self.observers.remove(observer)
+
+    def openfile(self):
+        """
+
+        :return:
+        """
+        for observer in self.observers:
+            name = filedialog.askopenfile()
+            observer.update(name)
+            print(name)
 
     def pack_label(self):
         """pack all the label into the window"""
