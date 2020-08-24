@@ -4,8 +4,14 @@ from typing import Optional, List
 import serial
 import serial.tools.list_ports
 import abc
+import numpy
+import scipy
+import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.figure as figure
 import matplotlib.animation as anime
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+matplotlib.use("Tkagg")
 import threading
 from collections.abc import Iterable, Iterator
 from typing import Any, List
@@ -133,15 +139,28 @@ class FileController:
     """
     In this class, implement everything about file manager, read, write etc.
     """
+
     def __init__(self):
         self.path = None
         self.file = []
         self.data = []  #
+        self.time_stamp = []
+        self.avg_ppm = []
+        self.indoor_temp = []
+        self.outdoor_temp = []
 
     def update(self, file):
-        self.file.append(file)
+        read_data = open(file, 'r')
+        self.data.append(read_data.readlines())
+        for i in range(len(self.data[0])):
+            temporary_data = str.split(self.data[0][i], sep=" ")
+            self.time_stamp.append(temporary_data[2])
+            self.avg_ppm.append(temporary_data[4])
+            self.indoor_temp.append(temporary_data[12])
+            self.outdoor_temp.append(temporary_data[11])
 
-
+    def print_data(self):
+        print(self.avg_ppm)
 
 class DataController:
     """
@@ -181,8 +200,11 @@ class GUIController:
         self.top = Tk()
         self.label = []
         self.button = []
+        self.canvas = []
         self.observers = []
         self.filedialog = None  # this is the diagram for load file interface
+        self.filepath = None  #
+        self.plot_window = None
         self.new_window = None
 
     def create_label(self):
@@ -191,7 +213,10 @@ class GUIController:
     def create_button(self):
         self.button.append(Button(self.top, text="setting", command=self.setting_callback))
         self.button.append(Button(self.top, text="load file", command=self.gotofiledialog))
-        self.button.append(Button(self.top, text=""))
+
+    def create_canvas(self):
+        self.canvas.append(Canvas(self.plot_window))
+        self.canvas[0].pack()
 
     def create_all(self):
         self.create_label()
@@ -199,14 +224,17 @@ class GUIController:
 
     def gotofiledialog(self):
         self.filedialog = filedialog.LoadFileDialog(self.top)
-        self.filedialog.go(key="go")
+        self.filepath = self.filedialog.go(key="go")
+        self.openfile()
+        self.plot_window = Toplevel(self.top)
+        self.plot_ppm()
 
     def setting_callback(self):
         self.new_window = Toplevel(self.top)
 
     def attach_observers(self, observer):
         """
-
+        Event based GUI interface. interaction between Data controller and file controller.
         :param observer:
         :return:
         """
@@ -222,13 +250,11 @@ class GUIController:
 
     def openfile(self):
         """
-
         :return:
         """
         for observer in self.observers:
-            name = filedialog.askopenfile()
-            observer.update(name)
-            print(name)
+            if isinstance(observer, FileController):
+                observer.update(self.filepath)
 
     def pack_label(self):
         """pack all the label into the window"""
@@ -243,8 +269,19 @@ class GUIController:
         self.pack_button()
         self.pack_label()
 
-    def plot(self):
-        pass
+    def plot_ppm(self):
+        for observer in self.observers:
+            if isinstance(observer, FileController):
+                fig = figure.Figure(figsize=(8,8))
+                a = fig.add_subplot(111)
+                a.plot(numpy.array(observer.time_stamp), numpy.array(observer.avg_ppm), color='blue')
+                a.set_title("CO2 average ppm")
+                a.set_ylabel("ppm", fontsize=14)
+                a.set_xlabel("time", fontsize=14)
+                canvas = FigureCanvasTkAgg(fig, master=self.plot_window)
+                canvas.get_tk_widget().pack()
+                canvas.draw()
+
 
     def run(self):
         self.top.mainloop()
@@ -259,6 +296,9 @@ class Controller:
     def __init__(self):
         self.data_server = DataController()
         self.gui_server = GUIController()
+        self.file_server = FileController()
+        self.gui_server.attach_observers(self.data_server)
+        self.gui_server.attach_observers(self.file_server)
 
     # create a popup window with start, stop, calibrate and icon
     def create_interactive_window(self):
