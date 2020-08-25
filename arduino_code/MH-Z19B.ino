@@ -1,5 +1,10 @@
 #include <SoftwareSerial.h>
 #include <MHZ.h>
+#include <semphr.h>
+
+//
+// Declaring a global variable of
+//
 
 // Include FreeRTOS library
 #include <Arduino_FreeRTOS.h>
@@ -16,14 +21,30 @@
 
 MHZ co2(MH_Z14_RX, MH_Z14_TX, CO2_IN, MHZ14A);
 
+SemaphoreHandle_t interruptSemaphore;
+
 void setup() {
   Serial.begin(9600);
   pinMode(CO2_IN, INPUT);
   delay(100);
   Serial.println("MHZ 14A");
 
+  xTaskCreate(TaskSerial, // Task function
+  "Serial", // Task serial
+  128, // Stack Size
+  NULL,
+  0, // Priority
+  NULL
+  );
+
+  interruptSemaphore = xSemamphoreCreateBinary();
+  if ( interruptSemaphore != NULL ) {
+    // Attach interrupt for Arduino digital pin
+    attachInterrupt(digital)
+  }
+
   // enable debug to get addition information
-//   co2.setDebug(true);
+  // co2.setDebug(true);
 
   if (co2.isPreHeating()) {
     Serial.print("Preheating");
@@ -37,6 +58,8 @@ void setup() {
   int calib = co2.calibrate();
   Serial.print(calib);
 }
+
+// loop can not be used.
 
 void loop() {
   Serial.print("\n----- Time from start: ");

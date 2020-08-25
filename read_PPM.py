@@ -158,6 +158,7 @@ class FileController:
             self.avg_ppm.append(temporary_data[4])
             self.indoor_temp.append(temporary_data[12])
             self.outdoor_temp.append(temporary_data[11])
+        read_data.close()
 
     def print_data(self):
         print(self.avg_ppm)
@@ -274,7 +275,7 @@ class GUIController:
             if isinstance(observer, FileController):
                 fig = figure.Figure(figsize=(8,8))
                 a = fig.add_subplot(111)
-                a.plot(numpy.array(observer.time_stamp), numpy.array(observer.avg_ppm), color='blue')
+                a.plot(observer.time_stamp[0:100], observer.avg_ppm[0:100], color='blue')
                 a.set_title("CO2 average ppm")
                 a.set_ylabel("ppm", fontsize=14)
                 a.set_xlabel("time", fontsize=14)
