@@ -10,16 +10,20 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.figure as figure
 import matplotlib.animation as anime
+import matplotlib.backends.backend_tkagg as tkagg
+from matplotlib.backend_bases import cursors
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-matplotlib.use("Tkagg")
 import threading
 from collections.abc import Iterable, Iterator
 from typing import Any, List
 from tkinter import *
 from tkinter import simpledialog, filedialog
 from datetime import datetime
-from tkinter import ttk
+from tkinter import ttk, Menu, Frame
 
+matplotlib.use("Tkagg")
+
+LARGE_FONT = ("Verdana", 12)
 keywords = ["b'PPMuart:", "PPMpwm:", "start:"]
 PPMuart = []
 PPMpwm = []
@@ -96,43 +100,33 @@ class SensorsCollection(Iterable, ABC):
         return
 
 
-class StartPage(Frame):
-    """
-    initial page of this
+class GraphPage(Frame):
     """
 
-    def __init__(self, parent):
+    """
+
+    def __init__(self, parent, controller):
         Frame.__init__(self, parent)
 
 
-class Window(Frame):
-    def __init__(self, master=None):
-        super().__init__(master)
-        self.master = master
-        self.canvas = Canvas
-        self.pack()
-        self.create_buttons()
-        self.start = None
-        self.stop = None
-        self.store = None
-        self.calibrate = None
+class HomePage(Frame):
+    """
+        The first page to begin my application,
+    """
 
-    def create_buttons(self):
-        self.start = Button(self, text="start", command=self.start_plot)
-        self.stop = Button(self, text="stop", command=self.stop_plot)
-        self.store = Button(self, text="store", command=self.store_plot)
-        self.calibrate = Button(self, text="calibrate", command=self.calibrate)
-
-    # collect CO2 data and plot live graph
-    def start_plot(self):
-        pass
-
-    #
-    def stop_plot(self):
-        pass
-
-    def calibrate(self):
-        pass
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        self.label = Label(self, text="room environment monitoring system", font=LARGE_FONT)
+        self.label.pack(side="top")
+        self.button1 = Button(self, text="load file", command=controller.gotofiledialog)
+        self.button1.pack()
+        self.button2 = Button(self,
+                              text="Plot the data from file",
+                              command=controller.plot_ppm)  # check the connection between computer and arduino
+        self.button2.pack()
+        self.button3 = Button(self, text="done", command=quit)
+        self.button3.pack()
 
 
 class FileController:
@@ -142,6 +136,7 @@ class FileController:
 
     def __init__(self):
         self.path = None
+        self.length = None
         self.file = []
         self.data = []  #
         self.time_stamp = []
@@ -158,10 +153,12 @@ class FileController:
             self.avg_ppm.append(temporary_data[4])
             self.indoor_temp.append(temporary_data[12])
             self.outdoor_temp.append(temporary_data[11])
+        self.length = len(self.data[0])
         read_data.close()
 
     def print_data(self):
         print(self.avg_ppm)
+
 
 class DataController:
     """
@@ -192,100 +189,96 @@ class DataController:
         self.serial.baudrate = target
 
 
-class GUIController:
+class GUIController(Tk):
     """
     In this class, implement everything about User interface.
     """
 
-    def __init__(self):
-        self.top = Tk()
-        self.label = []
-        self.button = []
-        self.canvas = []
-        self.observers = []
+    def __init__(self, *args, **kwargs):
+        Tk.__init__(self, *args, **kwargs)
+        Tk.wm_title(self, "Room Monitoring System")
+        container = Frame(self)
+        container.pack(side="top", fill="both", expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+
+        self.frames = {}
+        for F in (HomePage, GraphPage):
+            page_name = F.__name__
+            frame = F(parent=container, controller=self)
+            self.frames[page_name] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+
+        self.file_server = None
+        self.data_server = None
         self.filedialog = None  # this is the diagram for load file interface
         self.filepath = None  #
-        self.plot_window = None
-        self.new_window = None
+        self.show_frame("HomePage")
 
-    def create_label(self):
-        self.label.append(Label(self.top, text="room environment monitor"))
-
-    def create_button(self):
-        self.button.append(Button(self.top, text="setting", command=self.setting_callback))
-        self.button.append(Button(self.top, text="load file", command=self.gotofiledialog))
-
-    def create_canvas(self):
-        self.canvas.append(Canvas(self.plot_window))
-        self.canvas[0].pack()
-
-    def create_all(self):
-        self.create_label()
-        self.create_button()
+    def show_frame(self, page_name):
+        frame = self.frames[page_name]
+        frame.tkraise()
 
     def gotofiledialog(self):
-        self.filedialog = filedialog.LoadFileDialog(self.top)
+        self.filedialog = filedialog.LoadFileDialog(self)
         self.filepath = self.filedialog.go(key="go")
-        self.openfile()
-        self.plot_window = Toplevel(self.top)
-        self.plot_ppm()
+        self.update_data()
 
-    def setting_callback(self):
-        self.new_window = Toplevel(self.top)
-
-    def attach_observers(self, observer):
+    def attach_data_server(self, data_server):
         """
-        Event based GUI interface. interaction between Data controller and file controller.
+        :param data_server:
+        :return:
+        """
+        self.data_server = data_server
+
+    def attach_file_server(self, file_server):
+        """
+        add file server as an observer to monitor event
+        :param file_server:
+        :return:
+        """
+        self.file_server = file_server
+
+    def detach_file_server(self):
+        """
+        reset file server
         :param observer:
         :return:
         """
-        self.observers.append(observer)
+        self.file_server = None
 
-    def detach_observer(self, observer):
+    def detach_data_server(self):
         """
-
-        :param observer:
+        reset data server
         :return:
         """
-        self.observers.remove(observer)
+        self.data_server = None
 
-    def openfile(self):
+    def update_data(self):
         """
+        update data to data server for data processing
         :return:
         """
-        for observer in self.observers:
-            if isinstance(observer, FileController):
-                observer.update(self.filepath)
-
-    def pack_label(self):
-        """pack all the label into the window"""
-        for label in self.label:
-            label.pack()
-
-    def pack_button(self):
-        for b in self.button:
-            b.pack()
-
-    def pack_all(self):
-        self.pack_button()
-        self.pack_label()
+        self.file_server.update(self.filepath)
 
     def plot_ppm(self):
-        for observer in self.observers:
-            if isinstance(observer, FileController):
-                fig = figure.Figure(figsize=(8,8))
-                a = fig.add_subplot(111)
-                a.plot(observer.time_stamp[0:100], observer.avg_ppm[0:100], color='blue')
-                a.set_title("CO2 average ppm")
-                a.set_ylabel("ppm", fontsize=14)
-                a.set_xlabel("time", fontsize=14)
-                canvas = FigureCanvasTkAgg(fig, master=self.plot_window)
-                canvas.get_tk_widget().pack()
-                canvas.draw()
-
+        FS = self.file_server
+        fig = figure.Figure(figsize=(8, 8))
+        a = fig.add_subplot(111)
+        a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
+        a.set_title("CO2 average ppm")
+        major_xtick = numpy.arange(0, numpy.ceil(float(FS.time_stamp[-1])), FS.length / 5)
+        major_ytick = numpy.arange(0, numpy.ceil(float(FS.avg_ppm[-1])), FS.length / 100)
+        a.set_xticks(major_xtick)
+        a.set_yticks(major_ytick)
+        a.set_ylabel("ppm", fontsize=14)
+        a.set_xlabel("time", fontsize=14)
+        canvas = FigureCanvasTkAgg(fig, master=self)
+        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=True)
+        canvas.draw()
 
     def run(self):
-        self.top.mainloop()
+        self.mainloop()
 
 
 class Controller:
@@ -298,8 +291,8 @@ class Controller:
         self.data_server = DataController()
         self.gui_server = GUIController()
         self.file_server = FileController()
-        self.gui_server.attach_observers(self.data_server)
-        self.gui_server.attach_observers(self.file_server)
+        self.gui_server.attach_data_server(self.data_server)
+        self.gui_server.attach_file_server(self.file_server)
 
     # create a popup window with start, stop, calibrate and icon
     def create_interactive_window(self):
@@ -328,8 +321,6 @@ class Controller:
 
         :return:
         """
-        self.gui_server.create_all()
-        self.gui_server.pack_all()
         self.gui_server.run()
 
     def log(self):
