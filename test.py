@@ -22,9 +22,6 @@ import numpy as np
 LARGE_FONT = ("Verdana", 12)
 style.use("ggplot")
 
-f = Figure(figsize=(10, 6), dpi=100)
-a = f.add_subplot(111)
-
 
 def animate(i):
     dataLink = 'https://btc-e.com/api/3/trades/btc_usd?limit=2000'
@@ -82,16 +79,17 @@ class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        self.label = tk.Label(self, text="ALPHA Bitcoin trading application use at your own risk. There is no promiseof "
-                                    "warranty.", font=LARGE_FONT)
+        self.label = tk.Label(self,
+                              text="ALPHA Bitcoin trading application use at your own risk. There is no promiseof "
+                                   "warranty.", font=LARGE_FONT)
         self.label.pack(pady=10, padx=10)
 
         self.button1 = ttk.Button(self, text="Agree",
-                             command=lambda: controller.show_frame(BTCe_Page))
+                                  command=lambda: controller.show_frame(BTCe_Page))
         self.button1.pack()
 
         self.button2 = ttk.Button(self, text="Disagree",
-                             command=quit)
+                                  command=quit)
         self.button2.pack()
 
 
@@ -113,12 +111,36 @@ class BTCe_Page(tk.Frame):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
+        self.x = [1, 2, 3, 4, 5, 6, 7, 8]
+        self.y = [5, 6, 1, 3, 8, 9, 3, 5]
 
         button1 = ttk.Button(self, text="Back to Home",
                              command=lambda: controller.show_frame(StartPage))
         button1.pack()
 
-        canvas = FigureCanvasTkAgg(f, self)
+        self.button2 = ttk.Button(self, text="renew", command=lambda: self.renew())
+
+        self.button2.pack()
+
+        self.f = Figure(figsize=(5, 5), dpi=100)
+        self.a = self.f.add_subplot(111)
+        self.a.plot(self.x, self.y)
+
+        canvas = FigureCanvasTkAgg(self.f, self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+        toolbar = NavigationToolbar2Tk(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+    def renew(self):
+        self.x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        self.y = [5, 6, 1, 3, 8, 9, 3, 5, 19, 20]
+        self.a = self.f.add_subplot(111)
+        self.a.plot(self.x, self.y)
+
+        canvas = FigureCanvasTkAgg(self.f, self)
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
@@ -128,5 +150,4 @@ class BTCe_Page(tk.Frame):
 
 
 app = SeaofBTCapp()
-ani = animation.FuncAnimation(f, animate, interval=1000)
 app.mainloop()

@@ -12,7 +12,7 @@ import matplotlib.figure as figure
 import matplotlib.animation as anime
 import matplotlib.backends.backend_tkagg as tkagg
 from matplotlib.backend_bases import cursors
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import threading
 from collections.abc import Iterable, Iterator
 from typing import Any, List
@@ -28,9 +28,6 @@ keywords = ["b'PPMuart:", "PPMpwm:", "start:"]
 PPMuart = []
 PPMpwm = []
 timestamp = []
-fig = plt.figure()
-ax1 = fig.add_subplot(1, 1, 1)
-plt.title('CO2 concentration over Time')
 
 
 def current_time():
@@ -107,6 +104,34 @@ class GraphPage(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
+        self.controller = controller
+        self.label = Label(self, text='CO2 concentration (PPM)', font=LARGE_FONT)
+        self.label.pack(side='top')
+        self.button1 = Button(self, text="HomePage", command=lambda: controller.homepage())
+        self.button1.pack()
+        self.button2 = Button(self, text="plot", command=lambda: self.plot_ppm())
+        self.button2.pack()
+        self.fig = plt.Figure(figsize=(4, 4))
+        self.ax = self.fig.add_subplot(111)
+
+    def plot_ppm(self):
+        FS = self.controller.file_server
+        a = self.ax
+        fig = self.fig
+        a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
+        a.set_title("CO2 average ppm")
+        major_xtick = numpy.arange(0, numpy.ceil(float(FS.time_stamp[-1])), FS.length / 5)
+        major_ytick = numpy.arange(0, numpy.ceil(float(FS.avg_ppm[-1])), FS.length / 100)
+        a.set_xticks(major_xtick)
+        a.set_yticks(major_ytick)
+        a.set_ylabel("ppm", fontsize=14)
+        a.set_xlabel("time", fontsize=14)
+        canvas = FigureCanvasTkAgg(fig, self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
+        toolbar = NavigationToolbar2Tk(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
 
 
 class HomePage(Frame):
@@ -119,11 +144,11 @@ class HomePage(Frame):
         self.controller = controller
         self.label = Label(self, text="room environment monitoring system", font=LARGE_FONT)
         self.label.pack(side="top")
-        self.button1 = Button(self, text="load file", command=controller.gotofiledialog)
+        self.button1 = Button(self, text="load file", command=lambda: controller.gotofiledialog())
         self.button1.pack()
         self.button2 = Button(self,
                               text="Plot the data from file",
-                              command=controller.plot_ppm)  # check the connection between computer and arduino
+                              command=lambda: controller.plot())  # check the connection between computer and arduino
         self.button2.pack()
         self.button3 = Button(self, text="done", command=quit)
         self.button3.pack()
@@ -154,7 +179,15 @@ class FileController:
             self.indoor_temp.append(temporary_data[12])
             self.outdoor_temp.append(temporary_data[11])
         self.length = len(self.data[0])
+        print(len(self.data[0]))
         read_data.close()
+
+    def clear_all(self):
+        self.data.clear()
+        self.time_stamp.clear()
+        self.avg_ppm.clear()
+        self.indoor_temp.clear()
+        self.outdoor_temp.clear()
 
     def print_data(self):
         print(self.avg_ppm)
@@ -196,23 +229,29 @@ class GUIController(Tk):
 
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
+        Tk.iconbitmap(self)
         Tk.wm_title(self, "Room Monitoring System")
-        container = Frame(self)
+        container = self.container = Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
-        self.frames = {}
-        for F in (HomePage, GraphPage):
-            page_name = F.__name__
-            frame = F(parent=container, controller=self)
-            self.frames[page_name] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
+        self.frames = {"HomePage": HomePage(parent=container, controller=self)}
+        self.frames["HomePage"].grid(row=0, column=0, sticky="nsew")
 
         self.file_server = None
         self.data_server = None
         self.filedialog = None  # this is the diagram for load file interface
         self.filepath = None  #
+        self.show_frame("HomePage")
+
+    def homepage(self):
+        """
+
+        :return:
+        """
+        self.file_server.clear_all()
+        self.frames["GraphPage"].destroy()
         self.show_frame("HomePage")
 
     def show_frame(self, page_name):
@@ -261,21 +300,20 @@ class GUIController(Tk):
         """
         self.file_server.update(self.filepath)
 
-    def plot_ppm(self):
-        FS = self.file_server
-        fig = figure.Figure(figsize=(8, 8))
-        a = fig.add_subplot(111)
-        a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
-        a.set_title("CO2 average ppm")
-        major_xtick = numpy.arange(0, numpy.ceil(float(FS.time_stamp[-1])), FS.length / 5)
-        major_ytick = numpy.arange(0, numpy.ceil(float(FS.avg_ppm[-1])), FS.length / 100)
-        a.set_xticks(major_xtick)
-        a.set_yticks(major_ytick)
-        a.set_ylabel("ppm", fontsize=14)
-        a.set_xlabel("time", fontsize=14)
-        canvas = FigureCanvasTkAgg(fig, master=self)
-        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=True)
-        canvas.draw()
+    def create_graphpage(self):
+        """
+
+        :return:
+        """
+        self.frames["GraphPage"] = GraphPage(parent=self.container,controller=self)
+        self.frames["GraphPage"].grid(row=0, column=0, sticky="nsew")
+
+    def plot(self):
+        """
+        :return:
+        """
+        self.create_graphpage()
+        self.show_frame("GraphPage")
 
     def run(self):
         self.mainloop()
