@@ -45,7 +45,7 @@ def create_mhz14a():
 
 class Sensor(metaclass=abc.ABCMeta):
     """
-    this is the basic class for every sensor
+    This is the basic class for every sensor
     """
 
     @abc.abstractmethod
@@ -70,20 +70,21 @@ class MHZ14A(Sensor):
 
     def calibrate(self):
         """
-        set
+        Transmit calibrate instruction to set CO2 sensor as 400ppm
         :return:
         status: success or false.
         """
 
     def store(self):
         """
+        Store the data as a file after streaming.
         :return:
         """
         pass
 
     def create_plot(self):
         """
-
+        Streaming the data on live
         :return:
         """
         pass
@@ -97,9 +98,40 @@ class SensorsCollection(Iterable, ABC):
         return
 
 
+class StreamingPage(Frame):
+    """
+    In this page, it implements the live data streaming function.
+    Procedure:
+    """
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        self.button1 = Button(self, text="", command=lambda: controller.connect_to_arduino())
+
+    def start(self):
+        """
+        begin data streaming
+        :return:
+        """
+        pass
+
+    def stop(self):
+        """
+        stop data streaming
+        :return:
+        """
+
+    def save(self):
+        """
+        save the data and figure
+        :return:
+        """
+
+
 class GraphPage(Frame):
     """
-
+    In this page, show the basic data from single file. Add some algorithm to analyze this data.
+    besides, want to analyze multiple data.
     """
 
     def __init__(self, parent, controller):
@@ -111,7 +143,9 @@ class GraphPage(Frame):
         self.button1.pack()
         self.button2 = Button(self, text="plot", command=lambda: self.plot_ppm())
         self.button2.pack()
-        self.fig = plt.Figure(figsize=(4, 4))
+        self.button3 = Button(self, text="compare with other file", command=lambda: self.controller.read_another_file)
+        self.button3.pack()
+        self.fig = plt.Figure(figsize=(8, 8))
         self.ax = self.fig.add_subplot(111)
 
     def plot_ppm(self):
@@ -120,8 +154,10 @@ class GraphPage(Frame):
         fig = self.fig
         a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
         a.set_title("CO2 average ppm")
-        major_xtick = numpy.arange(0, numpy.ceil(float(FS.time_stamp[-1])), FS.length / 5)
-        major_ytick = numpy.arange(0, numpy.ceil(float(FS.avg_ppm[-1])), FS.length / 100)
+        xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
+        ydata = int(numpy.ceil(float(FS.avg_ppm[-1])-float(FS.avg_ppm[0])))
+        major_xtick = numpy.arange(0, xdata, xdata/5)
+        major_ytick = numpy.arange(0, ydata, ydata/5)
         a.set_xticks(major_xtick)
         a.set_yticks(major_ytick)
         a.set_ylabel("ppm", fontsize=14)
@@ -132,6 +168,14 @@ class GraphPage(Frame):
         toolbar = NavigationToolbar2Tk(canvas, self)
         toolbar.update()
         canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
+
+    def select_algorithm(self, algorithm):
+        """
+
+        :param algorithm:
+        :return:
+        """
+        pass
 
 
 class HomePage(Frame):
@@ -163,7 +207,7 @@ class FileController:
         self.path = None
         self.length = None
         self.file = []
-        self.data = []  #
+        self.data = []
         self.time_stamp = []
         self.avg_ppm = []
         self.indoor_temp = []
@@ -179,7 +223,6 @@ class FileController:
             self.indoor_temp.append(temporary_data[12])
             self.outdoor_temp.append(temporary_data[11])
         self.length = len(self.data[0])
-        print(len(self.data[0]))
         read_data.close()
 
     def clear_all(self):
@@ -235,7 +278,6 @@ class GUIController(Tk):
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
-
         self.frames = {"HomePage": HomePage(parent=container, controller=self)}
         self.frames["HomePage"].grid(row=0, column=0, sticky="nsew")
 
@@ -247,7 +289,7 @@ class GUIController(Tk):
 
     def homepage(self):
         """
-
+        Change the page to the home page
         :return:
         """
         self.file_server.clear_all()
@@ -293,6 +335,9 @@ class GUIController(Tk):
         """
         self.data_server = None
 
+    def read_another_file(self):
+        self.gotofiledialog()
+
     def update_data(self):
         """
         update data to data server for data processing
@@ -300,9 +345,15 @@ class GUIController(Tk):
         """
         self.file_server.update(self.filepath)
 
-    def create_graphpage(self):
+    def create_streamingpage(self):
+        """
+        Renew the graph page to
+        :return:
         """
 
+    def create_graphpage(self):
+        """
+        Renew the graph page to
         :return:
         """
         self.frames["GraphPage"] = GraphPage(parent=self.container,controller=self)
@@ -310,6 +361,7 @@ class GUIController(Tk):
 
     def plot(self):
         """
+        plot the graph from existing file.
         :return:
         """
         self.create_graphpage()
