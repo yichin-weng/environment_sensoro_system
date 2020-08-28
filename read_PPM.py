@@ -180,7 +180,7 @@ class GraphPage(Frame):
 
 class HomePage(Frame):
     """
-        The first page to begin my application,
+        The first page to begin my application, real time monitoring or file controller
     """
 
     def __init__(self, parent, controller):
@@ -196,7 +196,6 @@ class HomePage(Frame):
         self.button2.pack()
         self.button3 = Button(self, text="done", command=quit)
         self.button3.pack()
-
 
 class FileController:
     """
