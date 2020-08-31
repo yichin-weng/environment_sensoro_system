@@ -106,7 +106,9 @@ class StreamingPage(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
-        self.button1 = Button(self, text="", command=lambda: controller.connect_to_arduino())
+        self.button1 = Button(self, text="scan and connect", command=lambda: controller.connect_to_arduino())
+        self.button1.pack()
+        self.button2 = Button(self, text="")
 
     def start(self):
         """
@@ -140,11 +142,11 @@ class GraphPage(Frame):
         self.label = Label(self, text='CO2 concentration (PPM)', font=LARGE_FONT)
         self.label.pack(side='top')
         self.button1 = Button(self, text="HomePage", command=lambda: controller.homepage())
-        self.button1.pack()
+        self.button1.pack(side=LEFT, padx=10)
         self.button2 = Button(self, text="plot", command=lambda: self.plot_ppm())
-        self.button2.pack()
+        self.button2.pack(side=LEFT, padx=10)
         self.button3 = Button(self, text="compare with other file", command=lambda: self.controller.read_another_file)
-        self.button3.pack()
+        self.button3.pack(side=LEFT, padx=10)
         self.fig = plt.Figure(figsize=(8, 8))
         self.ax = self.fig.add_subplot(111)
 
@@ -164,10 +166,10 @@ class GraphPage(Frame):
         a.set_xlabel("time", fontsize=14)
         canvas = FigureCanvasTkAgg(fig, self)
         canvas.draw()
-        canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
+        canvas.get_tk_widget().pack(side=BOTTOM, expand=True)
         toolbar = NavigationToolbar2Tk(canvas, self)
         toolbar.update()
-        canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
+        canvas._tkcanvas.pack(side=TOP, expand=True)
 
     def select_algorithm(self, algorithm):
         """
@@ -189,13 +191,13 @@ class HomePage(Frame):
         self.label = Label(self, text="room environment monitoring system", font=LARGE_FONT)
         self.label.pack(side="top")
         self.button1 = Button(self, text="load file", command=lambda: controller.gotofiledialog())
-        self.button1.pack()
+        self.button1.pack(fill=X)
         self.button2 = Button(self,
                               text="Plot the data from file",
                               command=lambda: controller.plot())  # check the connection between computer and arduino
-        self.button2.pack()
+        self.button2.pack(fill=X)
         self.button3 = Button(self, text="done", command=quit)
-        self.button3.pack()
+        self.button3.pack(fill=X)
 
 class FileController:
     """
@@ -279,7 +281,6 @@ class GUIController(Tk):
         container.grid_columnconfigure(0, weight=1)
         self.frames = {"HomePage": HomePage(parent=container, controller=self)}
         self.frames["HomePage"].grid(row=0, column=0, sticky="nsew")
-
         self.file_server = None
         self.data_server = None
         self.filedialog = None  # this is the diagram for load file interface
@@ -365,6 +366,13 @@ class GUIController(Tk):
         """
         self.create_graphpage()
         self.show_frame("GraphPage")
+
+    def connect_to_arduino(self):
+        """
+        check if the 
+        :return:
+        """
+        pass
 
     def run(self):
         self.mainloop()
