@@ -101,7 +101,7 @@ class AlgorithmPage(Frame):
         pass
 
 
-class StreamingPage(Frame):
+class LivePage(Frame):
     """
     In this page, it implements the live data streaming function.
     Procedure:
@@ -145,26 +145,34 @@ class GraphPage(Frame):
         self.controller = controller
         self.label = Label(self, text='CO2 concentration (PPM)', font=LARGE_FONT)
         self.label.place(x=300, y=0)
-        self.button1 = Button(self, text="HomePage", command=lambda: controller.homepage(), height=1, width=20)
+        # create button
+        self.button1 = Button(self, text="HomePage", command=lambda: self.homepage(), height=1, width=20)
         self.button1.place(x=100, y=30)
-        self.button2 = Button(self, text="plot", command=lambda: self.plot_ppm(), height=1, width=20)
+        self.button2 = Button(self, text="plot", command=lambda: self.plot(), height=1, width=20)
         self.button2.place(x=100, y=60)
         self.button3 = Button(self, text="compare with other file", height=1, width=20, command=lambda: self.controller.read_another_file())
         self.button3.place(x=100, y=90)
+        # create checkbutton
         self.ppm = BooleanVar()
         self.temp = BooleanVar()
-        self.sel_list = StringVar(value=algorithm_sel)
-        self.algorithm_sel = Listbox(self, listvariable=self.sel_list, selectmode='algorithm', height=4)
-        self.algorithm_sel.bind('<<ListboxSelect>>', lambda: self.test())
-        self.algorithm_sel.place(x=400, y=30)
         self.ppm.set(False)
         self.temp.set(False)
         self.checkbutton1 = Checkbutton(self, text="average PPM", command=lambda: self.set_select_ppm())
         self.checkbutton2 = Checkbutton(self, text="temperature", command=lambda: self.set_select_temp())
         self.checkbutton1.place(x=300, y=30)
         self.checkbutton2.place(x=300, y=60)
+        # create listbox
+        self.sel_list = StringVar(value=algorithm_sel)
+        self.algorithm_sel = Listbox(self, listvariable=self.sel_list, selectmode='algorithm', height=4)
+        self.algorithm_sel.bind('<<ListboxSelect>>', lambda: self.test())
+        self.algorithm_sel.place(x=400, y=30)
         self.fig = plt.Figure(figsize=(8, 8))
         self.ax = self.fig.add_subplot(111)
+
+    def homepage(self):
+        self.controller.file_server.clear_all()
+        self.controller.frames["GraphPage"].destroy()
+        self.controller.show_frame("HomePage")
 
     def test(self):
         print(self.ppm.get())
@@ -189,6 +197,13 @@ class GraphPage(Frame):
         else:
             self.temp.set(True)
 
+    def plot(self):
+        if self.temp.get():
+            self.plot_temperature()
+
+        if self.ppm.get():
+            self.plot_ppm()
+
     def plot_ppm(self):
         FS = self.controller.file_server
         a = self.ax
@@ -197,6 +212,27 @@ class GraphPage(Frame):
         a.set_title("CO2 average ppm")
         xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
         ydata = int(numpy.ceil(float(FS.avg_ppm[-1]) - float(FS.avg_ppm[0])))
+        major_xtick = numpy.arange(0, xdata, xdata / 5)
+        major_ytick = numpy.arange(0, ydata, ydata / 5)
+        a.set_xticks(major_xtick)
+        a.set_yticks(major_ytick)
+        a.set_ylabel("ppm", fontsize=14)
+        a.set_xlabel("time", fontsize=14)
+        canvas = FigureCanvasTkAgg(fig, self)
+        canvas.draw()
+        canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
+        toolbar = NavigationToolbar2Tk(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.place(x=100, y=120)
+
+    def plot_temperature(self):
+        FS = self.controller.file_server
+        a = self.ax
+        fig = self.fig
+        a.plot(FS.time_stamp, FS.indoor_temp, color='blue')
+        a.set_title("indoor temperature (C)")
+        xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
+        ydata = int(numpy.ceil(float(FS.indoor_temp[-1]) - float(FS.indoor_temp[0])))
         major_xtick = numpy.arange(0, xdata, xdata / 5)
         major_ytick = numpy.arange(0, ydata, ydata / 5)
         a.set_xticks(major_xtick)
@@ -233,10 +269,12 @@ class HomePage(Frame):
         self.button1.pack(fill=X)
         self.button2 = Button(self,
                               text="Plot the data from file",
-                              command=lambda: controller.plot())  # check the connection between computer and arduino
+                              command=lambda: controller.plot_from_file())  # check the connection between computer and arduino
         self.button2.pack(fill=X)
         self.button3 = Button(self, text="done", command=quit)
-        self.button3.pack(fill=X)
+        self.button3.pack(fill=X, side="bottom")
+        self.button4 = Button(self, text="plot real time data", command=controller.plot_real_time_data())
+        self.button4.pack(fill=X)
 
 
 class FileController:
@@ -298,7 +336,7 @@ class DataController:
 
     def serial_read_data(self):
         if self.serial.inWaiting():
-            self.serial.readlines()
+            print(self.serial.readlines())
 
     def store_data(self):
         pass
@@ -329,20 +367,23 @@ class GUIController(Tk):
         self.show_frame("HomePage")
         self.geometry("800x600+20+20")
 
-    def homepage(self):
-        """
-        Change the page to the home page
-        :return:
-        """
-        self.file_server.clear_all()
-        self.frames["GraphPage"].destroy()
-        self.show_frame("HomePage")
+    def plot_real_time_data(self):
+        pass
 
     def show_frame(self, page_name):
+        """
+        Change the page to corresponding page name.
+        :param page_name:
+        :return:
+        """
         frame = self.frames[page_name]
         frame.tkraise()
 
     def gotofiledialog(self):
+        """
+        show the Filedialog
+        :return:
+        """
         self.filedialog = filedialog.LoadFileDialog(self)
         self.filepath = self.filedialog.go(key="go")
         self.update_data()
@@ -387,21 +428,23 @@ class GUIController(Tk):
         """
         self.file_server.update(self.filepath)
 
-    def create_streamingpage(self):
-        """
-        Renew the graph page to
-        :return:
-        """
-
     def create_graphpage(self):
         """
-        Renew the graph page to
+        Renew the graph page
         :return:
         """
         self.frames["GraphPage"] = GraphPage(parent=self.container, controller=self)
         self.frames["GraphPage"].grid(row=0, column=0, sticky="nsew")
 
-    def plot(self):
+    def create_livepage(self):
+        """
+        Renew the live data page
+        :return:
+        """
+        self.frames["LivePage"] = LivePage(parent=self.container, controller=self)
+        self.frames["LivePage"].grid(row=0, column=0, sticky="nsew")
+
+    def plot_from_file(self):
         """
         plot the graph from existing file.
         :return:
