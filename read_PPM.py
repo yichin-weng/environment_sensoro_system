@@ -144,30 +144,30 @@ class GraphPage(Frame):
         Frame.__init__(self, parent)
         self.controller = controller
         self.label = Label(self, text='CO2 concentration (PPM)', font=LARGE_FONT)
-        self.label.pack(side='top')
-        self.button1 = Button(self, text="HomePage", command=lambda: controller.homepage())
-        self.button1.pack(side=LEFT, padx=10)
-        self.button2 = Button(self, text="plot", command=lambda: self.plot_ppm())
-        self.button2.pack(side=LEFT, padx=10)
-        self.button3 = Button(self, text="compare with other file", command=lambda: self.controller.read_another_file())
-        self.button3.pack(side=LEFT, padx=10)
+        self.label.place(x=300, y=0)
+        self.button1 = Button(self, text="HomePage", command=lambda: controller.homepage(), height=1, width=20)
+        self.button1.place(x=100, y=30)
+        self.button2 = Button(self, text="plot", command=lambda: self.plot_ppm(), height=1, width=20)
+        self.button2.place(x=100, y=60)
+        self.button3 = Button(self, text="compare with other file", height=1, width=20, command=lambda: self.controller.read_another_file())
+        self.button3.place(x=100, y=90)
         self.ppm = BooleanVar()
         self.temp = BooleanVar()
         self.sel_list = StringVar(value=algorithm_sel)
         self.algorithm_sel = Listbox(self, listvariable=self.sel_list, selectmode='algorithm', height=4)
         self.algorithm_sel.bind('<<ListboxSelect>>', lambda: self.test())
-        self.algorithm_sel.pack()
+        self.algorithm_sel.place(x=400, y=30)
         self.ppm.set(False)
         self.temp.set(False)
         self.checkbutton1 = Checkbutton(self, text="average PPM", command=lambda: self.set_select_ppm())
         self.checkbutton2 = Checkbutton(self, text="temperature", command=lambda: self.set_select_temp())
-        self.checkbutton1.pack()
-        self.checkbutton2.pack()
+        self.checkbutton1.place(x=300, y=30)
+        self.checkbutton2.place(x=300, y=60)
         self.fig = plt.Figure(figsize=(8, 8))
         self.ax = self.fig.add_subplot(111)
 
     def test(self):
-        pass
+        print(self.ppm.get())
 
     def set_select_ppm(self):
         """
@@ -205,10 +205,10 @@ class GraphPage(Frame):
         a.set_xlabel("time", fontsize=14)
         canvas = FigureCanvasTkAgg(fig, self)
         canvas.draw()
-        canvas.get_tk_widget().pack(side=BOTTOM, expand=True)
+        canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
         toolbar = NavigationToolbar2Tk(canvas, self)
         toolbar.update()
-        canvas._tkcanvas.pack(side=TOP, expand=True)
+        canvas._tkcanvas.place(x=100, y=120)
 
     def select_algorithm(self, algorithm):
         """
@@ -327,6 +327,7 @@ class GUIController(Tk):
         self.filedialog = None  # this is the diagram for load file interface
         self.filepath = None  #
         self.show_frame("HomePage")
+        self.geometry("800x600+20+20")
 
     def homepage(self):
         """
