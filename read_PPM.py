@@ -25,9 +25,7 @@ matplotlib.use("Tkagg")
 
 LARGE_FONT = ("Verdana", 12)
 keywords = ["b'PPMuart:", "PPMpwm:", "start:"]
-PPMuart = []
-PPMpwm = []
-timestamp = []
+algorithm_sel = ['FFT', 'Wavelet Transform', 'autocorrelation', 'Poincare plot']
 
 
 def current_time():
@@ -98,11 +96,17 @@ class SensorsCollection(Iterable, ABC):
         return
 
 
+class AlgorithmPage(Frame):
+    def __init__(self):
+        pass
+
+
 class StreamingPage(Frame):
     """
     In this page, it implements the live data streaming function.
     Procedure:
     """
+
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
@@ -145,10 +149,45 @@ class GraphPage(Frame):
         self.button1.pack(side=LEFT, padx=10)
         self.button2 = Button(self, text="plot", command=lambda: self.plot_ppm())
         self.button2.pack(side=LEFT, padx=10)
-        self.button3 = Button(self, text="compare with other file", command=lambda: self.controller.read_another_file)
+        self.button3 = Button(self, text="compare with other file", command=lambda: self.controller.read_another_file())
         self.button3.pack(side=LEFT, padx=10)
+        self.ppm = BooleanVar()
+        self.temp = BooleanVar()
+        self.sel_list = StringVar(value=algorithm_sel)
+        self.algorithm_sel = Listbox(self, listvariable=self.sel_list, selectmode='algorithm', height=4)
+        self.algorithm_sel.bind('<<ListboxSelect>>', lambda: self.test())
+        self.algorithm_sel.pack()
+        self.ppm.set(False)
+        self.temp.set(False)
+        self.checkbutton1 = Checkbutton(self, text="average PPM", command=lambda: self.set_select_ppm())
+        self.checkbutton2 = Checkbutton(self, text="temperature", command=lambda: self.set_select_temp())
+        self.checkbutton1.pack()
+        self.checkbutton2.pack()
         self.fig = plt.Figure(figsize=(8, 8))
         self.ax = self.fig.add_subplot(111)
+
+    def test(self):
+        pass
+
+    def set_select_ppm(self):
+        """
+        By selecting this value, plot figure of ppm.
+        :return:
+        """
+        if self.ppm.get():
+            self.ppm.set(False)
+        else:
+            self.ppm.set(True)
+
+    def set_select_temp(self):
+        """
+        By selecting this value, plot figure of temperature.
+        :return:
+        """
+        if self.temp.get():
+            self.temp.set(False)
+        else:
+            self.temp.set(True)
 
     def plot_ppm(self):
         FS = self.controller.file_server
@@ -157,9 +196,9 @@ class GraphPage(Frame):
         a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
         a.set_title("CO2 average ppm")
         xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
-        ydata = int(numpy.ceil(float(FS.avg_ppm[-1])-float(FS.avg_ppm[0])))
-        major_xtick = numpy.arange(0, xdata, xdata/5)
-        major_ytick = numpy.arange(0, ydata, ydata/5)
+        ydata = int(numpy.ceil(float(FS.avg_ppm[-1]) - float(FS.avg_ppm[0])))
+        major_xtick = numpy.arange(0, xdata, xdata / 5)
+        major_ytick = numpy.arange(0, ydata, ydata / 5)
         a.set_xticks(major_xtick)
         a.set_yticks(major_ytick)
         a.set_ylabel("ppm", fontsize=14)
@@ -173,7 +212,7 @@ class GraphPage(Frame):
 
     def select_algorithm(self, algorithm):
         """
-
+        From the listbox, applying the corresponding algorithm on the data.
         :param algorithm:
         :return:
         """
@@ -198,6 +237,7 @@ class HomePage(Frame):
         self.button2.pack(fill=X)
         self.button3 = Button(self, text="done", command=quit)
         self.button3.pack(fill=X)
+
 
 class FileController:
     """
@@ -224,6 +264,7 @@ class FileController:
             self.indoor_temp.append(temporary_data[12])
             self.outdoor_temp.append(temporary_data[11])
         self.length = len(self.data[0])
+        print(self.avg_ppm[-1])
         read_data.close()
 
     def clear_all(self):
@@ -356,7 +397,7 @@ class GUIController(Tk):
         Renew the graph page to
         :return:
         """
-        self.frames["GraphPage"] = GraphPage(parent=self.container,controller=self)
+        self.frames["GraphPage"] = GraphPage(parent=self.container, controller=self)
         self.frames["GraphPage"].grid(row=0, column=0, sticky="nsew")
 
     def plot(self):
