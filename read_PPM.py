@@ -168,6 +168,7 @@ class GraphPage(Frame):
         self.algorithm_sel.place(x=400, y=30)
         self.fig = plt.Figure(figsize=(8, 8))
         self.ax = self.fig.add_subplot(111)
+        self.ax2 = self.fig.add_subplot(411)
 
     def homepage(self):
         self.controller.file_server.clear_all()
@@ -204,10 +205,11 @@ class GraphPage(Frame):
         if self.ppm.get():
             self.plot_ppm()
 
+        self.plot_canvas()
+
     def plot_ppm(self):
         FS = self.controller.file_server
         a = self.ax
-        fig = self.fig
         a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
         a.set_title("CO2 average ppm")
         xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
@@ -218,18 +220,11 @@ class GraphPage(Frame):
         a.set_yticks(major_ytick)
         a.set_ylabel("ppm", fontsize=14)
         a.set_xlabel("time", fontsize=14)
-        canvas = FigureCanvasTkAgg(fig, self)
-        canvas.draw()
-        canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
-        toolbar = NavigationToolbar2Tk(canvas, self)
-        toolbar.update()
-        canvas._tkcanvas.place(x=100, y=120)
 
     def plot_temperature(self):
         FS = self.controller.file_server
-        a = self.ax
-        fig = self.fig
-        a.plot(FS.time_stamp, FS.indoor_temp, color='blue')
+        a = self.ax2
+        a.plot(FS.time_stamp, FS.indoor_temp, color='red')
         a.set_title("indoor temperature (C)")
         xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
         ydata = int(numpy.ceil(float(FS.indoor_temp[-1]) - float(FS.indoor_temp[0])))
@@ -237,9 +232,11 @@ class GraphPage(Frame):
         major_ytick = numpy.arange(0, ydata, ydata / 5)
         a.set_xticks(major_xtick)
         a.set_yticks(major_ytick)
-        a.set_ylabel("ppm", fontsize=14)
+        a.set_ylabel("temperature", fontsize=14)
         a.set_xlabel("time", fontsize=14)
-        canvas = FigureCanvasTkAgg(fig, self)
+
+    def plot_canvas(self):
+        canvas = FigureCanvasTkAgg(self.fig, self)
         canvas.draw()
         canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
         toolbar = NavigationToolbar2Tk(canvas, self)
