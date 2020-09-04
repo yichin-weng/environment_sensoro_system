@@ -125,7 +125,9 @@ class LivePage(Frame):
         begin data streaming
         :return:
         """
-        self.controller.file_server.open_new_file()
+        self.controller.start_streaming()
+        self.animate()
+        self.plot_canvas()
 
     def stop(self):
         """
@@ -141,7 +143,15 @@ class LivePage(Frame):
         """
         pass
 
-    def animate(self, interval):
+    def plot_canvas(self):
+        canvas = FigureCanvasTkAgg(self.controller.fig, self)
+        canvas.draw()
+        canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
+        toolbar = NavigationToolbar2Tk(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.place(x=100, y=120)
+
+    def animate(self):
         """
         :return:
         """
@@ -286,7 +296,7 @@ class HomePage(Frame):
         self.button2.pack(fill=X)
         self.button3 = Button(self, text="done", command=quit)
         self.button3.pack(fill=X, side="bottom")
-        self.button4 = Button(self, text="plot real time data", command=lambda: controller.start_streaming())
+        self.button4 = Button(self, text="plot real time data", command=lambda: controller.plot_from_serial())
         self.button4.pack(fill=X)
 
 
@@ -332,13 +342,15 @@ class FileController:
         """
         :return:
         """
-        self.data = str(data).split()
-        for x, pos in enumerate(self.data):
-            if x == keywords[0]:
-                self.avg_ppm.append(int(self.data[pos+1].split(",")[0]))
-
-            if x == keywords[2]:
-                self.time_stamp.append(int(self.data[pos+1].split(",")[0]))
+        self.data.append(str(data))
+        for i in range(len(data)):
+            temporary_data = str.split(self.data[i], sep=" ")
+            print(temporary_data)
+            self.time_stamp.append(temporary_data[2])
+            self.avg_ppm.append(temporary_data[4])
+            self.indoor_temp.append(temporary_data[12])
+            self.outdoor_temp.append(temporary_data[11])
+        self.length = len(self.data[0])
 
     def clear_all(self):
         self.data.clear()
@@ -414,6 +426,7 @@ class GUIController(Tk):
         """
         self.file_server.open_new_file()
         serial_data = self.data_server.serial_read_data()
+        self.file_server.read_from_serial(serial_data)
 
     def stop_streaming(self):
         """
@@ -503,6 +516,13 @@ class GUIController(Tk):
         """
         self.create_graphpage()
         self.show_frame("GraphPage")
+
+    def plot_from_serial(self):
+        """
+
+        """
+        self.create_livepage()
+        self.show_frame("LivePage")
 
     def connect_to_arduino(self):
         """
