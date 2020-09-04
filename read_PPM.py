@@ -5,6 +5,7 @@ import serial
 import serial.tools.list_ports
 import abc
 import numpy
+import os
 import scipy
 import matplotlib
 import matplotlib.pyplot as plt
@@ -110,28 +111,43 @@ class LivePage(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
-        self.button1 = Button(self, text="scan and connect", command=lambda: controller.connect_to_arduino())
-        self.button1.pack()
-        self.button2 = Button(self, text="")
+        self.connect_b = Button(self, text="scan and connect", command=lambda: controller.connect_to_arduino())
+        self.connect_b.pack()
+        self.start_b = Button(self, text="start", command=lambda: self.start())
+        self.start_b.pack()
+        self.stop_b = Button(self, text="stop", command=lambda: self.stop())
+        self.stop_b.pack()
+        self.ani = anime.FuncAnimation(controller.fig, self.animate, interval=1000)
+        self.ax = controller.fig.add_subplot(1, 1, 1)
 
     def start(self):
         """
         begin data streaming
         :return:
         """
-        pass
+        self.controller.file_server.open_new_file()
 
     def stop(self):
         """
         stop data streaming
         :return:
         """
+        pass
 
     def save(self):
         """
         save the data and figure
         :return:
         """
+        pass
+
+    def animate(self, interval):
+        """
+        :return:
+        """
+        self.controller.file_server.read_from_serial(self.controller.data_server.serial_read_data())
+        self.ax.clear()
+        self.ax.plot(self.controller.file_server.time_stamp, self.controller.file_server.avg_ppm, label="PPM")
 
 
 class GraphPage(Frame):
@@ -150,7 +166,8 @@ class GraphPage(Frame):
         self.button1.place(x=100, y=30)
         self.button2 = Button(self, text="plot", command=lambda: self.plot(), height=1, width=20)
         self.button2.place(x=100, y=60)
-        self.button3 = Button(self, text="compare with other file", height=1, width=20, command=lambda: self.controller.read_another_file())
+        self.button3 = Button(self, text="compare with other file", height=1, width=20,
+                              command=lambda: self.controller.read_another_file())
         self.button3.place(x=100, y=90)
         # create checkbutton
         self.ppm = BooleanVar()
@@ -166,9 +183,8 @@ class GraphPage(Frame):
         self.algorithm_sel = Listbox(self, listvariable=self.sel_list, selectmode='algorithm', height=4)
         self.algorithm_sel.bind('<<ListboxSelect>>', lambda: self.test())
         self.algorithm_sel.place(x=400, y=30)
-        self.fig = plt.Figure(figsize=(8, 8))
-        self.ax = self.fig.add_subplot(111)
-        self.ax2 = self.fig.add_subplot(411)
+        self.ax = controller.fig.add_subplot(111)
+        self.ax2 = controller.fig.add_subplot(411)
 
     def homepage(self):
         self.controller.file_server.clear_all()
@@ -236,7 +252,7 @@ class GraphPage(Frame):
         a.set_xlabel("time", fontsize=14)
 
     def plot_canvas(self):
-        canvas = FigureCanvasTkAgg(self.fig, self)
+        canvas = FigureCanvasTkAgg(self.controller.fig, self)
         canvas.draw()
         canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
         toolbar = NavigationToolbar2Tk(canvas, self)
@@ -270,7 +286,7 @@ class HomePage(Frame):
         self.button2.pack(fill=X)
         self.button3 = Button(self, text="done", command=quit)
         self.button3.pack(fill=X, side="bottom")
-        self.button4 = Button(self, text="plot real time data", command=controller.plot_real_time_data())
+        self.button4 = Button(self, text="plot real time data", command=lambda: controller.start_streaming())
         self.button4.pack(fill=X)
 
 
@@ -280,9 +296,9 @@ class FileController:
     """
 
     def __init__(self):
-        self.path = None
+        self.path = os.getcwd()
         self.length = None
-        self.file = []
+        self.file = None
         self.data = []
         self.time_stamp = []
         self.avg_ppm = []
@@ -299,8 +315,30 @@ class FileController:
             self.indoor_temp.append(temporary_data[12])
             self.outdoor_temp.append(temporary_data[11])
         self.length = len(self.data[0])
-        print(self.avg_ppm[-1])
         read_data.close()
+
+    def open_new_file(self):
+        """
+        before beginning streaming data from arduino
+        :return:
+        """
+        name_of_file = current_time().strftime("%Y%m%d-%H%M%S")
+        self.file = open(name_of_file+".dat", 'w')
+
+    def close_file(self):
+        self.file.close()
+
+    def read_from_serial(self, data):
+        """
+        :return:
+        """
+        self.data = str(data).split()
+        for x, pos in enumerate(self.data):
+            if x == keywords[0]:
+                self.avg_ppm.append(int(self.data[pos+1].split(",")[0]))
+
+            if x == keywords[2]:
+                self.time_stamp.append(int(self.data[pos+1].split(",")[0]))
 
     def clear_all(self):
         self.data.clear()
@@ -332,8 +370,11 @@ class DataController:
             self.serial = None
 
     def serial_read_data(self):
+        """
+        :return:
+        """
         if self.serial.inWaiting():
-            print(self.serial.readlines())
+            return self.serial.readlines()
 
     def store_data(self):
         pass
@@ -357,14 +398,28 @@ class GUIController(Tk):
         container.grid_columnconfigure(0, weight=1)
         self.frames = {"HomePage": HomePage(parent=container, controller=self)}
         self.frames["HomePage"].grid(row=0, column=0, sticky="nsew")
+        self.streaming_data = []
         self.file_server = None
         self.data_server = None
         self.filedialog = None  # this is the diagram for load file interface
         self.filepath = None  #
         self.show_frame("HomePage")
         self.geometry("800x600+20+20")
+        self.fig = plt.Figure(figsize=(8, 8))
 
-    def plot_real_time_data(self):
+    def start_streaming(self):
+        """
+        check the Uart connection with arduino
+        :return:
+        """
+        self.file_server.open_new_file()
+        serial_data = self.data_server.serial_read_data()
+
+    def stop_streaming(self):
+        """
+        stop real time graph but still collecting data from sensors
+        :return:
+        """
         pass
 
     def show_frame(self, page_name):
