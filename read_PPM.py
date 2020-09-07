@@ -8,6 +8,7 @@ import numpy
 import os
 import scipy
 import matplotlib
+import matplotlib.axes
 import matplotlib.pyplot as plt
 import matplotlib.figure as figure
 import matplotlib.animation as anime
@@ -171,7 +172,7 @@ class GraphPage(Frame):
         self.controller = controller
         self.label = Label(self, text='CO2 concentration (PPM)', font=LARGE_FONT)
         self.label.place(x=300, y=0)
-        # create button
+        # create buttons
         self.button1 = Button(self, text="HomePage", command=lambda: self.homepage(), height=1, width=20)
         self.button1.place(x=100, y=30)
         self.button2 = Button(self, text="plot", command=lambda: self.plot(), height=1, width=20)
@@ -179,7 +180,7 @@ class GraphPage(Frame):
         self.button3 = Button(self, text="compare with other file", height=1, width=20,
                               command=lambda: self.controller.read_another_file())
         self.button3.place(x=100, y=90)
-        # create checkbutton
+        # create a checkbutton for the data we want to observe
         self.ppm = BooleanVar()
         self.temp = BooleanVar()
         self.ppm.set(False)
@@ -188,21 +189,18 @@ class GraphPage(Frame):
         self.checkbutton2 = Checkbutton(self, text="temperature", command=lambda: self.set_select_temp())
         self.checkbutton1.place(x=300, y=30)
         self.checkbutton2.place(x=300, y=60)
-        # create listbox
+        # create a listbox for the algorithm we want to apply on the data
         self.sel_list = StringVar(value=algorithm_sel)
         self.algorithm_sel = Listbox(self, listvariable=self.sel_list, selectmode='algorithm', height=4)
         self.algorithm_sel.bind('<<ListboxSelect>>', lambda: self.test())
         self.algorithm_sel.place(x=400, y=30)
-        self.ax = controller.fig.add_subplot(111)
-        self.ax2 = controller.fig.add_subplot(411)
+        # controller.fig.subplots_adjust(hspace=0.4, wspace=0.4)
 
     def homepage(self):
         self.controller.file_server.clear_all()
+        plt.clf()
         self.controller.frames["GraphPage"].destroy()
         self.controller.show_frame("HomePage")
-
-    def test(self):
-        print(self.ppm.get())
 
     def set_select_ppm(self):
         """
@@ -230,26 +228,27 @@ class GraphPage(Frame):
 
         if self.ppm.get():
             self.plot_ppm()
-
         self.plot_canvas()
 
     def plot_ppm(self):
         FS = self.controller.file_server
-        a = self.ax
+        a = self.controller.axs[0, 0]
         a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
         a.set_title("CO2 average ppm")
-        xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
+#        xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
         ydata = int(numpy.ceil(float(FS.avg_ppm[-1]) - float(FS.avg_ppm[0])))
-        major_xtick = numpy.arange(0, xdata, xdata / 5)
+#        major_xtick = numpy.arange(0, xdata, xdata / 5)
         major_ytick = numpy.arange(0, ydata, ydata / 5)
-        a.set_xticks(major_xtick)
+#        a.set_xticks(major_xtick)
         a.set_yticks(major_ytick)
+        a.set_xscale("linear")
+#        a.set_yscale("linear")
         a.set_ylabel("ppm", fontsize=14)
         a.set_xlabel("time", fontsize=14)
 
     def plot_temperature(self):
         FS = self.controller.file_server
-        a = self.ax2
+        a = self.controller.axs[0, 1]
         a.plot(FS.time_stamp, FS.indoor_temp, color='red')
         a.set_title("indoor temperature (C)")
         xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
@@ -292,11 +291,11 @@ class HomePage(Frame):
         self.button1.pack(fill=X)
         self.button2 = Button(self,
                               text="Plot the data from file",
-                              command=lambda: controller.plot_from_file())  # check the connection between computer and arduino
+                              command=lambda: controller.go_to_graph_page())  # check the connection between computer and arduino
         self.button2.pack(fill=X)
         self.button3 = Button(self, text="done", command=quit)
         self.button3.pack(fill=X, side="bottom")
-        self.button4 = Button(self, text="plot real time data", command=lambda: controller.plot_from_serial())
+        self.button4 = Button(self, text="plot real time data", command=lambda: controller.go_to_live_page())
         self.button4.pack(fill=X)
 
 
@@ -333,7 +332,7 @@ class FileController:
         :return:
         """
         name_of_file = current_time().strftime("%Y%m%d-%H%M%S")
-        self.file = open(name_of_file+".dat", 'w')
+        self.file = open(name_of_file + ".dat", 'w')
 
     def close_file(self):
         self.file.close()
@@ -415,16 +414,19 @@ class GUIController(Tk):
         self.data_server = None
         self.filedialog = None  # this is the diagram for load file interface
         self.filepath = None  #
+        self.fig = None
+        self.axs = None
         self.show_frame("HomePage")
-        self.geometry("800x600+20+20")
-        self.fig = plt.Figure(figsize=(8, 8))
+        self.geometry("1200x800+20+20")
+
+    def create_data_plot(self):
+        self.fig, self.axs = plt.subplots(2, 2, figsize=(8, 8))
 
     def start_streaming(self):
         """
         check the Uart connection with arduino
         :return:
         """
-        self.file_server.open_new_file()
         serial_data = self.data_server.serial_read_data()
         self.file_server.read_from_serial(serial_data)
 
@@ -450,8 +452,11 @@ class GUIController(Tk):
         :return:
         """
         self.filedialog = filedialog.LoadFileDialog(self)
-        self.filepath = self.filedialog.go(key="go")
-        self.update_data()
+        self.filepath = self.filedialog.go(key="go")  # select a file and store the path
+        if self.filepath is None:
+            return
+        else:
+            self.update_data()
 
     def attach_data_server(self, data_server):
         """
@@ -498,6 +503,7 @@ class GUIController(Tk):
         Renew the graph page
         :return:
         """
+        self.create_data_plot()
         self.frames["GraphPage"] = GraphPage(parent=self.container, controller=self)
         self.frames["GraphPage"].grid(row=0, column=0, sticky="nsew")
 
@@ -509,7 +515,7 @@ class GUIController(Tk):
         self.frames["LivePage"] = LivePage(parent=self.container, controller=self)
         self.frames["LivePage"].grid(row=0, column=0, sticky="nsew")
 
-    def plot_from_file(self):
+    def go_to_graph_page(self):
         """
         plot the graph from existing file.
         :return:
@@ -517,7 +523,7 @@ class GUIController(Tk):
         self.create_graphpage()
         self.show_frame("GraphPage")
 
-    def plot_from_serial(self):
+    def go_to_live_page(self):
         """
 
         """
