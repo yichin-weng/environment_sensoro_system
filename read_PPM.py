@@ -119,7 +119,6 @@ class LivePage(Frame):
         self.stop_b = Button(self, text="stop", command=lambda: self.stop())
         self.stop_b.pack()
         self.ani = anime.FuncAnimation(controller.fig, self.animate, interval=1000)
-        self.ax = controller.fig.add_subplot(1, 1, 1)
 
     def start(self):
         """
@@ -151,6 +150,7 @@ class LivePage(Frame):
         toolbar = NavigationToolbar2Tk(canvas, self)
         toolbar.update()
         canvas._tkcanvas.place(x=100, y=120)
+        canvas.show()
 
     def animate(self):
         """
@@ -195,10 +195,10 @@ class GraphPage(Frame):
         self.algorithm_sel.bind('<<ListboxSelect>>', lambda: self.test())
         self.algorithm_sel.place(x=400, y=30)
         # controller.fig.subplots_adjust(hspace=0.4, wspace=0.4)
+        self.canvas = FigureCanvasTkAgg(self.controller.fig, self)
 
     def homepage(self):
         self.controller.file_server.clear_all()
-        plt.clf()
         self.controller.frames["GraphPage"].destroy()
         self.controller.show_frame("HomePage")
 
@@ -261,12 +261,11 @@ class GraphPage(Frame):
         a.set_xlabel("time", fontsize=14)
 
     def plot_canvas(self):
-        canvas = FigureCanvasTkAgg(self.controller.fig, self)
-        canvas.draw()
-        canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
-        toolbar = NavigationToolbar2Tk(canvas, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
+        toolbar = NavigationToolbar2Tk(self.canvas, self)
         toolbar.update()
-        canvas._tkcanvas.place(x=100, y=120)
+        self.canvas._tkcanvas.place(x=100, y=120)
 
     def select_algorithm(self, algorithm):
         """
