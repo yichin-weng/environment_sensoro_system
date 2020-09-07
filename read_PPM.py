@@ -150,7 +150,6 @@ class LivePage(Frame):
         toolbar = NavigationToolbar2Tk(canvas, self)
         toolbar.update()
         canvas._tkcanvas.place(x=100, y=120)
-        canvas.show()
 
     def animate(self):
         """
