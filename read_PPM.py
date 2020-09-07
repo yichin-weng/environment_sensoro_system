@@ -196,7 +196,12 @@ class GraphPage(Frame):
         # controller.fig.subplots_adjust(hspace=0.4, wspace=0.4)
         self.canvas = FigureCanvasTkAgg(self.controller.fig, self)
 
+    def reset_page(self):
+        self.ppm.set(False)
+        self.temp.set(False)
+
     def homepage(self):
+        self.reset_page()
         self.controller.file_server.clear_all()
         self.controller.frames["GraphPage"].destroy()
         self.controller.show_frame("HomePage")
@@ -226,7 +231,6 @@ class GraphPage(Frame):
             self.plot_temperature()
 
         if self.ppm.get():
-            print("?")
             self.plot_ppm()
         self.plot_canvas()
 
@@ -234,7 +238,6 @@ class GraphPage(Frame):
         FS = self.controller.file_server
         a = self.controller.axs[0, 0]
         a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
-        print(a, self.controller.axs[0, 0])
         a.set_title("CO2 average ppm")
 #        xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
         ydata = int(numpy.ceil(float(FS.avg_ppm[-1]) - float(FS.avg_ppm[0])))
