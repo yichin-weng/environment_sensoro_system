@@ -201,7 +201,6 @@ class GraphPage(Frame):
         self.temp.set(False)
 
     def homepage(self):
-        self.reset_page()
         self.controller.file_server.clear_all()
         self.controller.frames["GraphPage"].destroy()
         self.controller.show_frame("HomePage")
