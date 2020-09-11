@@ -180,12 +180,10 @@ class GraphPage(Frame):
                               command=lambda: self.controller.read_another_file())
         self.button3.place(x=100, y=90)
         # create a checkbutton for the data we want to observe
-        self.ppm = BooleanVar()
-        self.temp = BooleanVar()
-        self.ppm.set(False)
-        self.temp.set(False)
-        self.checkbutton1 = Checkbutton(self, text="average PPM", command=lambda: self.set_select_ppm())
-        self.checkbutton2 = Checkbutton(self, text="temperature", command=lambda: self.set_select_temp())
+        self.ppm = IntVar()
+        self.temp = IntVar()
+        self.checkbutton1 = Checkbutton(self, text="average PPM", variable=self.ppm, onvalue=1, offvalue=0)
+        self.checkbutton2 = Checkbutton(self, text="temperature", variable=self.temp, onvalue=1, offvalue=0)
         self.checkbutton1.place(x=300, y=30)
         self.checkbutton2.place(x=300, y=60)
         # create a listbox for the algorithm we want to apply on the data
@@ -195,35 +193,13 @@ class GraphPage(Frame):
         self.algorithm_sel.place(x=400, y=30)
         # controller.fig.subplots_adjust(hspace=0.4, wspace=0.4)
         self.canvas = FigureCanvasTkAgg(self.controller.fig, self)
-
-    def reset_page(self):
-        self.ppm.set(False)
-        self.temp.set(False)
+        toolbar = NavigationToolbar2Tk(self.canvas, self)
+        toolbar.update()
 
     def homepage(self):
         self.controller.file_server.clear_all()
         self.controller.frames["GraphPage"].destroy()
         self.controller.show_frame("HomePage")
-
-    def set_select_ppm(self):
-        """
-        By selecting this value, plot figure of ppm.
-        :return:
-        """
-        if self.ppm.get():
-            self.ppm.set(False)
-        else:
-            self.ppm.set(True)
-
-    def set_select_temp(self):
-        """
-        By selecting this value, plot figure of temperature.
-        :return:
-        """
-        if self.temp.get():
-            self.temp.set(False)
-        else:
-            self.temp.set(True)
 
     def plot(self):
         if self.temp.get():
@@ -238,14 +214,10 @@ class GraphPage(Frame):
         a = self.controller.axs[0, 0]
         a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
         a.set_title("CO2 average ppm")
-#        xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
         ydata = int(numpy.ceil(float(FS.avg_ppm[-1]) - float(FS.avg_ppm[0])))
-#        major_xtick = numpy.arange(0, xdata, xdata / 5)
         major_ytick = numpy.arange(0, ydata, ydata / 5)
-#        a.set_xticks(major_xtick)
         a.set_yticks(major_ytick)
         a.set_xscale("linear")
-#        a.set_yscale("linear")
         a.set_ylabel("ppm", fontsize=14)
         a.set_xlabel("time", fontsize=14)
 
@@ -266,8 +238,6 @@ class GraphPage(Frame):
     def plot_canvas(self):
         self.canvas.draw()
         self.canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
-        toolbar = NavigationToolbar2Tk(self.canvas, self)
-        toolbar.update()
         self.canvas._tkcanvas.place(x=100, y=120)
 
     def select_algorithm(self, algorithm):
