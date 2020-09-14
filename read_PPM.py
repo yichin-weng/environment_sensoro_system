@@ -161,7 +161,13 @@ class LivePage(Frame):
         self.start_b.pack()
         self.stop_b = Button(self, text="stop", command=lambda: self.stop())
         self.stop_b.pack()
-        self.ani = anime.FuncAnimation(controller.fig, self.animate, interval=1000)
+        self.homepage_b = Button(self, text="Home Page", command=lambda: self.homepage())
+        self.homepage_b.pack()
+        # self.ani = anime.FuncAnimation(controller.fig, self.animate, interval=1000)
+
+    def homepage(self):
+        self.controller.frames["LivePage"].destroy()
+        self.controller.show_frame("HomePage")
 
     def start(self):
         """
