@@ -257,10 +257,6 @@ class GraphPage(Frame):
         a = self.controller.axs[0, 0]
         a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
         a.set_title("CO2 average ppm")
-        ydata = int(numpy.ceil(float(max(FS.avg_ppm)) - float(min(FS.avg_ppm))))
-        print(max(FS.avg_ppm), min(FS.avg_ppm))
-        major_ytick = numpy.arange(0, ydata, ydata / 5)
-        a.set_yticks(major_ytick)
         a.set_xscale("linear")
         a.set_ylabel("ppm", fontsize=14)
         a.set_xlabel("time", fontsize=14)
@@ -331,10 +327,10 @@ class FileController:
         self.data.append(read_data.readlines())
         for i in range(len(self.data[0])):
             temporary_data = str.split(self.data[0][i], sep=" ")
-            self.time_stamp.append(temporary_data[2])
-            self.avg_ppm.append(temporary_data[4])
-            self.indoor_temp.append(temporary_data[12])
-            self.outdoor_temp.append(temporary_data[11])
+            self.time_stamp.append(float(temporary_data[2]))
+            self.avg_ppm.append(float(temporary_data[4]))
+            self.indoor_temp.append(float(temporary_data[12]))
+            self.outdoor_temp.append(float(temporary_data[11]))
         self.length = len(self.data[0])
         read_data.close()
 
@@ -351,6 +347,7 @@ class FileController:
 
     def read_from_serial(self, data):
         """
+        read string and cast them into integers
         :return:
         """
         self.data.append(str(data))
