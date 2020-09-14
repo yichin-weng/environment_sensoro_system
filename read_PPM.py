@@ -28,19 +28,11 @@ matplotlib.use("Tkagg")
 LARGE_FONT = ("Verdana", 12)
 keywords = ["b'PPMuart:", "PPMpwm:", "start:"]
 algorithm_sel = ['FFT', 'Wavelet Transform', 'autocorrelation', 'Poincare plot']
+my_ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
 
 
 def current_time():
     return datetime.now()
-
-
-"""
-create every types of sensor
-"""
-
-
-def create_mhz14a():
-    return MHZ14A()
 
 
 class Sensor(metaclass=abc.ABCMeta):
@@ -56,7 +48,31 @@ class Sensor(metaclass=abc.ABCMeta):
         return NotImplemented
 
 
-class MHZ14A(Sensor):
+class TempSensor(Sensor):
+    def __init__(self):
+        pass
+
+    def calibrate(self):
+        pass
+
+
+class HumidSensor(Sensor):
+    def __init__(self):
+        pass
+
+    def calibrate(self):
+        pass
+
+
+class O2Sensor(Sensor):
+    def __init__(self):
+        pass
+
+    def calibrate(self):
+        pass
+
+
+class CO2Sensor(Sensor):
     """
     this sensor can detect the concentration of carbon-dioxide.
     the data will be transmitted directly by UART interface
@@ -90,12 +106,39 @@ class MHZ14A(Sensor):
         pass
 
 
-class SensorsCollection(Iterable, ABC):
-    def __init__(self, collection: List[Any] = []) -> None:
-        self._collection = collection
+class SensorCollection:
+    def __init__(self, nums_of_co2_sensor, nums_of_o2_sensor, nums_of_humid_sensor, nums_of_temp_sensor):
+        self.co2_sensor = List[Optional[CO2Sensor]] = [None for _ in range(nums_of_co2_sensor)]
+        self.o2_sensor = List[Optional[O2Sensor]] = [None for _ in range(nums_of_o2_sensor)]
+        self.humid_sensor = List[Optional[HumidSensor]] = [None for _ in range(nums_of_humid_sensor)]
+        self.temp_sensor = List[Optional[TempSensor]] = [None for _ in range(nums_of_temp_sensor)]
 
-    def __iter__(self):
-        return
+
+class VirtualDevice:
+    """
+    Create sets of virtual devices to simulate live streaming
+    """
+
+    def __init__(self):
+        self.device = SensorCollection(1, 1, 1, 1)
+
+    def calibrate_all(self):
+        for d in [self.co2_sensor, self.o2_sensor, self.humid_sensor, self.temp_sensor]:
+            d.calibrate()
+
+    def stop(self):
+        """
+        start streaming from serial port
+        :return:
+        """
+        pass
+
+    def start(self):
+        """
+        start streaming from serial port
+        :return:
+        """
+        pass
 
 
 class AlgorithmPage(Frame):
@@ -214,7 +257,8 @@ class GraphPage(Frame):
         a = self.controller.axs[0, 0]
         a.plot(FS.time_stamp, FS.avg_ppm, color='blue')
         a.set_title("CO2 average ppm")
-        ydata = int(numpy.ceil(float(FS.avg_ppm[-1]) - float(FS.avg_ppm[0])))
+        ydata = int(numpy.ceil(float(max(FS.avg_ppm)) - float(min(FS.avg_ppm))))
+        print(max(FS.avg_ppm), min(FS.avg_ppm))
         major_ytick = numpy.arange(0, ydata, ydata / 5)
         a.set_yticks(major_ytick)
         a.set_xscale("linear")
@@ -226,12 +270,7 @@ class GraphPage(Frame):
         a = self.controller.axs[0, 1]
         a.plot(FS.time_stamp, FS.indoor_temp, color='red')
         a.set_title("indoor temperature (C)")
-        xdata = int(numpy.ceil(float(FS.time_stamp[-1])))
-        ydata = int(numpy.ceil(float(FS.indoor_temp[-1]) - float(FS.indoor_temp[0])))
-        major_xtick = numpy.arange(0, xdata, xdata / 5)
-        major_ytick = numpy.arange(0, ydata, ydata / 5)
-        a.set_xticks(major_xtick)
-        a.set_yticks(major_ytick)
+        a.set_xscale("linear")
         a.set_ylabel("temperature", fontsize=14)
         a.set_xlabel("time", fontsize=14)
 
@@ -259,6 +298,7 @@ class HomePage(Frame):
         self.controller = controller
         self.label = Label(self, text="room environment monitoring system", font=LARGE_FONT)
         self.label.pack(side="top")
+        # file window and
         self.button1 = Button(self, text="load file", command=lambda: controller.gotofiledialog())
         self.button1.pack(fill=X)
         self.button2 = Button(self,
@@ -341,16 +381,9 @@ class DataController:
 
     def __init__(self):
         self.start_time = current_time()
-        my_ports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
-        try:
-            arduino_port = [port for port in my_ports if 'Arduino' in port[1]][0]
-        except:
-            arduino_port = []
-        try:
-            self.serial = serial.Serial(arduino_port[0], 9600,
-                                        timeout=0)  # consider a method to change serial data rate.
-        except:
-            self.serial = None
+        self.device = Optional[SensorCollection]
+        self.arduino_port = [port for port in my_ports if 'Arduino' in port[1]][0]
+        self.serial = serial.Serial(self.arduino_port[0], 9600, timeout=0)
 
     def serial_read_data(self):
         """
@@ -525,16 +558,13 @@ class Controller:
         self.file_server = FileController()
         self.gui_server.attach_data_server(self.data_server)
         self.gui_server.attach_file_server(self.file_server)
-
-    # create a popup window with start, stop, calibrate and icon
-    def create_interactive_window(self):
-        pass
+        self.sensor = []
 
     def read_option(self):
         pass
 
-    def create_sensor(self, sensor_type):
-        pass
+    def create_sensor(self):
+        self.sensor = Optional[SensorCollection]
 
     def calibrate(self):
         pass
