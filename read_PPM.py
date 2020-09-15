@@ -108,10 +108,10 @@ class CO2Sensor(Sensor):
 
 class SensorCollection:
     def __init__(self, nums_of_co2_sensor, nums_of_o2_sensor, nums_of_humid_sensor, nums_of_temp_sensor):
-        self.co2_sensor = List[Optional[CO2Sensor]] = [None for _ in range(nums_of_co2_sensor)]
-        self.o2_sensor = List[Optional[O2Sensor]] = [None for _ in range(nums_of_o2_sensor)]
-        self.humid_sensor = List[Optional[HumidSensor]] = [None for _ in range(nums_of_humid_sensor)]
-        self.temp_sensor = List[Optional[TempSensor]] = [None for _ in range(nums_of_temp_sensor)]
+        self.co2_sensor = [CO2Sensor for _ in range(nums_of_co2_sensor)]
+        self.o2_sensor = [O2Sensor for _ in range(nums_of_o2_sensor)]
+        self.humid_sensor = [HumidSensor for _ in range(nums_of_humid_sensor)]
+        self.temp_sensor = [TempSensor for _ in range(nums_of_temp_sensor)]
 
 
 class VirtualDevice:
@@ -121,6 +121,7 @@ class VirtualDevice:
 
     def __init__(self):
         self.device = SensorCollection(1, 1, 1, 1)
+        self.file = open("20200818_194841.dat", "r")
 
     def calibrate_all(self):
         for d in [self.co2_sensor, self.o2_sensor, self.humid_sensor, self.temp_sensor]:
@@ -163,7 +164,11 @@ class LivePage(Frame):
         self.stop_b.pack()
         self.homepage_b = Button(self, text="Home Page", command=lambda: self.homepage())
         self.homepage_b.pack()
-        # self.ani = anime.FuncAnimation(controller.fig, self.animate, interval=1000)
+        self.ani = anime.FuncAnimation(controller.fig, self.plot_live_data, interval=1000)
+        self.canvas = FigureCanvasTkAgg(self.controller.fig, self)
+        self.idx = 0
+        toolbar = NavigationToolbar2Tk(self.canvas, self)
+        toolbar.update()
 
     def homepage(self):
         self.controller.frames["LivePage"].destroy()
@@ -174,9 +179,9 @@ class LivePage(Frame):
         begin data streaming
         :return:
         """
-        self.controller.start_streaming()
         self.animate()
         self.plot_canvas()
+        self.controller.after(10, self.plot_live_data)
 
     def stop(self):
         """
@@ -192,21 +197,24 @@ class LivePage(Frame):
         """
         pass
 
+    def plot_live_data(self):
+        self.animate()
+        self.plot_canvas()
+        self.controller.after(10, self.plot_live_data)
+
     def plot_canvas(self):
-        canvas = FigureCanvasTkAgg(self.controller.fig, self)
-        canvas.draw()
-        canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
-        toolbar = NavigationToolbar2Tk(canvas, self)
-        toolbar.update()
-        canvas._tkcanvas.place(x=100, y=120)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
 
     def animate(self):
         """
         :return:
         """
-        self.controller.file_server.read_from_serial(self.controller.data_server.serial_read_data())
-        self.ax.clear()
-        self.ax.plot(self.controller.file_server.time_stamp, self.controller.file_server.avg_ppm, label="PPM")
+        self.controller.start_streaming(self.idx)
+        self.controller.axs[0, 0].clear()
+        self.controller.axs[0, 0].plot(self.controller.file_server.time_stamp, self.controller.file_server.avg_ppm,
+                                       label="PPM")
+        self.idx += 1
 
 
 class GraphPage(Frame):
@@ -279,7 +287,6 @@ class GraphPage(Frame):
     def plot_canvas(self):
         self.canvas.draw()
         self.canvas.get_tk_widget().place(x=100, y=120, height=300, width=560)
-        self.canvas._tkcanvas.place(x=100, y=120)
 
     def select_algorithm(self, algorithm):
         """
@@ -351,19 +358,17 @@ class FileController:
     def close_file(self):
         self.file.close()
 
-    def read_from_serial(self, data):
+    def store_data_from_serial(self, data, idx):
         """
         read string and cast them into integers
         :return:
         """
         self.data.append(str(data))
-        for i in range(len(data)):
-            temporary_data = str.split(self.data[i], sep=" ")
-            print(temporary_data)
-            self.time_stamp.append(temporary_data[2])
-            self.avg_ppm.append(temporary_data[4])
-            self.indoor_temp.append(temporary_data[12])
-            self.outdoor_temp.append(temporary_data[11])
+        temporary_data = str.split(self.data[idx], sep=" ")
+        self.time_stamp.append(float(temporary_data[2]))
+        self.avg_ppm.append(float(temporary_data[4]))
+        self.indoor_temp.append(float(temporary_data[12]))
+        self.outdoor_temp.append(float(temporary_data[11]))
         self.length = len(self.data[0])
 
     def clear_all(self):
@@ -385,15 +390,26 @@ class DataController:
     def __init__(self):
         self.start_time = current_time()
         self.device = Optional[SensorCollection]
-        self.arduino_port = [port for port in my_ports if 'Arduino' in port[1]][0]
-        self.serial = serial.Serial(self.arduino_port[0], 9600, timeout=0)
+        self.arduino_port = [port for port in my_ports if 'Arduino' in port[1]]
+        if not self.arduino_port:
+            self.serial = None
+        else:
+            self.serial = serial.Serial(self.arduino_port[0][0], 9600, timeout=0)
+        self.virtual_device = Optional[VirtualDevice]
 
-    def serial_read_data(self):
+    def serial_read_data(self, idx):
         """
         :return:
         """
-        if self.serial.inWaiting():
+        if self.arduino_port:
             return self.serial.readlines()
+        else:
+            lines = self.read_from_virtual()
+            return lines[idx]
+
+    def read_from_virtual(self):
+        self.virtual_device = VirtualDevice()
+        return self.virtual_device.file.readlines()
 
     def store_data(self):
         pass
@@ -430,13 +446,13 @@ class GUIController(Tk):
     def create_data_plot(self):
         self.fig, self.axs = plt.subplots(2, 2, figsize=(8, 8))
 
-    def start_streaming(self):
+    def start_streaming(self, idx):
         """
         check the Uart connection with arduino
         :return:
         """
-        serial_data = self.data_server.serial_read_data()
-        self.file_server.read_from_serial(serial_data)
+        serial_data = self.data_server.serial_read_data(idx)
+        self.file_server.store_data_from_serial(serial_data, idx)
 
     def stop_streaming(self):
         """
@@ -520,6 +536,7 @@ class GUIController(Tk):
         Renew the live data page
         :return:
         """
+        self.create_data_plot()
         self.frames["LivePage"] = LivePage(parent=self.container, controller=self)
         self.frames["LivePage"].grid(row=0, column=0, sticky="nsew")
 
