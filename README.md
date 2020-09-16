@@ -15,6 +15,11 @@ and periodically send data to computer by **Serial port**.
 3. **TR-76Ui**: control model.
 4. **lists to buy**:
 
+5. **CO2 sensor (SGP30)**: equivalent carbon dioxide and volatile organic compounds 
+6. **multiple sensor(BME680)**: moisture, barometric pressure, temperature, humidity and 
+volatile compounds by this sensed
+[reference site](https://www.adafruit.com/product/3660)
+
 |item|price|numbers|description|
 |----|-----|-------|-----------|
 |[PWMGELID FAN](https://www.amazon.co.jp/%E9%9D%99%E9%9F%B3PWM%E3%83%95%E3%82%A1%E3%83%B3-PWM-%E3%83%8F%E3%82%A4%E3%83%89%E3%83%AD%E3%83%80%E3%82%A4%E3%83%8A%E3%83%9F%E3%83%83%E3%82%AF%E3%83%99%E3%82%A2%E3%83%AA%E3%83%B3%E3%82%B0%E6%8E%A1%E7%94%A8%E9%9D%99%E9%9F%B3FAN-Silent8-PWMGELID/dp/B002BVUNEE/ref=sr_1_3?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&dchild=1&keywords=%E9%9D%99%E9%9F%B3+pwm&qid=1594096697&refinements=p_76%3A2227292051&rnid=2227291051&rps=1&s=computers&sr=1-3)|980yen/1|4|candidate axial fan|

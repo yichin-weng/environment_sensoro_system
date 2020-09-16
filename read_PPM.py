@@ -299,7 +299,7 @@ class GraphPage(Frame):
 
 class HomePage(Frame):
     """
-        The first page to begin my application, real time monitoring or file controller
+    The first page to begin my application, real time monitoring or file controller
     """
 
     def __init__(self, parent, controller):
