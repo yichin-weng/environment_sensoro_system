@@ -43,6 +43,8 @@ Software:
 2. pycharm: Plotting real-time data, implementing data processing using python
 3. git: all source code is maintained in the **gitlab**
 
+[espressif project for bluetooth mesh](https://github.com/espressif/esp-idf/tree/8bc19ba893e5544d571a753d82b44a84799b94b1/examples/bluetooth/esp_ble_mesh/ble_mesh_sensor_model/sensor_client)
+
 ## The physical phenomenon:
 [Thermal conductivity](https://en.wikipedia.org/wiki/Thermal_conductivity):
 
